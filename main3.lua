@@ -343,10 +343,11 @@ room {
 				end
 				return false
 			end;
+			before_SwitchOff = [[Ты должен оставаться на связи.]];
 			daemon = function(s)
 				p [[Ты слышишь как звонит твой мобильный.]];
 			end;
-		}
+		}:attr 'switchable,on'
 	};
 }
 
