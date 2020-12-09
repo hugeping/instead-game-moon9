@@ -177,6 +177,12 @@ Prop = Class {
 function init()
 	walk 'home'
 end
+function start()
+	local t = _'comp'.time
+	if t ~= 0 then
+		_'comp'.time = os.time()
+	end
+end
 -- https://kosmolenta.com/index.php/488-2015-01-15-moon-seven
 pl.description = function(s)
 	p [[Тебя зовут Борис.]];
@@ -382,7 +388,8 @@ cutscene {
 	Миссия: cмена вахты на российско-китайской лунной базе "Луна-9". Выяснение причины пропажи связи, спасение экипажа.
 	]];
 	next_to = 'кресло';
-	exit = [[Ты медленно пробуждаешься. Пристёгнутый к креслу в довольно неудобной для сна позе, ты несколько секунд смотришь сквозь носовые иллюминаторы. Часть обзора загораживает посадочный модуль. А на фоне его ты видишь яркий, заполняющий всё лунный свет.]];
+	exit = [[Ты медленно пробуждаешься. Пристёгнутый к креслу в довольно неудобной для сна позе, ты несколько секунд смотришь сквозь носовые иллюминаторы. Часть обзора загораживает посадочный модуль. А на фоне его ты видишь яркий, заполняющий всё лунный свет.^^
+	Слева и справа от тебя, к своим креслам пристёгнуты Александр и Сергей. Они ещё спят.]];
 }
 
 Verb {
@@ -458,7 +465,7 @@ room {
 	Prop { -"стены/но,жр" };
 	Ephe { -"свет", description = [[Солнце светит в боковые иллюминаторы. А сквозь носовые в корабль проникает серебряный свет Луны.]] };
 	Prop {
-		-"кресла/мн,ср";
+		-"кресла/мн,ср|левое кресло|правое кресло";
 		description = [[В командном модуле установлены три кресла. Твоё кресло командира -- среднее.]];
 	};
 	obj {
@@ -475,8 +482,78 @@ room {
 			mp:xaction("ClipOff", _'belts')
 		end;
 		obj = { 'belts' };
-	}:attr 'container,transparent,open,concealed,enterable,static';
+	}:attr 'supporter,open,concealed,enterable,static';
+	obj {
+		nam = 'Сергей';
+		-"Сергей,Серёжа";
+		sleep = true;
+		description = function(s)
+			if s.sleep then
+				p [[Сергей Чернов -- пилот командного модуля. Занимает кресло слева от командирского. Спит.]];
+			else
+			end
+		end;
+		['before_WakeOther,Attack,Touch'] = function(s)
+			if s.sleep then
+				p [[Пусть поспит ещё немного. ЦУП скоро разбудит его и Сашу по радио.]];
+			else
+				return false
+			end
+		end;
+	}:attr 'animate';
+	obj {
+		nam = 'Александр';
+		-"Александр,Саша";
+		sleep = true;
+		['before_WakeOther,Attack,Touch'] = function(s)
+			if s.sleep then
+				p [[Пусть поспит ещё немного. ЦУП всё-равно скоро его разбудит.]];
+			else
+				return false
+			end
+		end;
+		description = function(s)
+			p [[Александр Катаев -- пилот лунного модуля. Занимает правое кресло от командира. Пока он спит.]];
+		end;
+	}:attr 'animate';
+	obj {
+		nam = 'comp';
+		time = 0;
+		fltime = 11 + 32*60 + 67*60*60;
+		-"компьютер,бортовой компьютер";	
+		dsc = [[Бортовой компьютер помигивает неяркими огоньками.]];
+		description = function(s)
+			if s.time == 0 then
+				s.time = os.time()
+			end
+			update_time()
+			show_time()
+		end;
+	}:attr'static';
+	Ephe { -"огоньки,огни", description = [[Похоже, всё в порядке.]] };
 }
+function update_time(delta)
+	local flt = _'comp'.fltime
+	if delta then
+		flt = flt + delta
+	else
+		local cur = os.time()
+		local diff = cur - _'comp'.time
+		if diff < 0 then
+			diff = 0
+		end
+		flt = flt + diff
+		_'comp'.time = cur
+	end
+	_'comp'.fltime = flt
+end
+function show_time(flt)
+	flt = flt or _'comp'.fltime
+	local sec = flt % 60
+	local min = math.floor(flt / 60 % 60)
+	local hh = math.floor(flt / 60 / 60)
+	p ([[Время полёта: ]], hh, " час. ", min, " мин. ", sec, " сек.")
+end
 
 -- эпизод 1
 -- вход в тень Луны, видны звёзды
