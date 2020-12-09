@@ -392,8 +392,11 @@ cutscene {
 	Миссия: cмена вахты на российско-китайской лунной базе "Луна-9". Выяснение причины пропажи связи, спасение экипажа.
 	]];
 	next_to = 'кресло';
-	exit = [[Ты медленно пробуждаешься. Пристёгнутый к креслу в довольно неудобной для сна позе, ты несколько секунд смотришь сквозь носовые иллюминаторы. Часть обзора загораживает посадочный модуль. А на фоне его ты видишь яркий, заполняющий всё лунный свет.^^
+	exit = function()
+		p [[Ты медленно пробуждаешься. Пристёгнутый к креслу в довольно неудобной для сна позе, ты несколько секунд смотришь сквозь носовые иллюминаторы. Часть обзора загораживает посадочный модуль. А на фоне его ты видишь яркую, заполняющую всё Луну.^^
 	Слева и справа от тебя, к своим креслам пристёгнуты Александр и Сергей. Они ещё спят.]];
+		DaemonStart 'comp'
+	end
 }
 
 Verb {
@@ -523,6 +526,9 @@ room {
 	obj {
 		nam = 'comp';
 		time = 0;
+		dist = 936;
+		speed = 2.336;
+		start = 11 + 32*60 + 67*60*60;
 		fltime = 11 + 32*60 + 67*60*60;
 		-"компьютер,бортовой компьютер";
 		dsc = [[Бортовой компьютер помигивает неяркими огоньками.]];
@@ -530,33 +536,52 @@ room {
 			if s.time == 0 then
 				s.time = os.time()
 			end
-			update_time()
-			show_time()
+			show_stats()
+		end;
+		daemon = function(s)
+			update_comp()
 		end;
 	}:attr'static';
 	Ephe { -"огоньки,огни", description = [[Похоже, всё в порядке.]] };
 }
-function update_time(delta)
+
+function update_comp(delta)
+	if _'comp'.time == 0 then
+		_'comp'.time = os.time()
+	end
 	local flt = _'comp'.fltime
 	if delta then
 		flt = flt + delta
 	else
 		local cur = os.time()
-		local diff = cur - _'comp'.time
-		if diff < 0 then
-			diff = 0
+		delta = cur - _'comp'.time
+		if delta < 0 then
+			delta = 0
 		end
-		flt = flt + diff
+		if delta > 3*60 then
+			delta = 3*60
+		end
+		flt = flt + delta
 		_'comp'.time = cur
 	end
+	-- print(_'comp'.dist, delta)
 	_'comp'.fltime = flt
+	local dist = _'comp'.dist - delta*_'comp'.speed
+	if dist < 110 then
+		dist = 110
+	end
+	_'comp'.dist = dist
+	_'comp'.speed = _'comp'.speed + 0.00001 * delta
 end
-function show_time(flt)
+
+function show_stats(flt)
 	flt = flt or _'comp'.fltime
 	local sec = flt % 60
 	local min = math.floor(flt / 60 % 60)
 	local hh = math.floor(flt / 60 / 60)
-	p ([[Время полёта: ]], hh, " час. ", min, " мин. ", sec, " сек.")
+	pn ([[Время полёта: ]], hh, " час. ", min, " мин. ", sec, " сек.")
+	pn ([[Расстояние: ]], string.format("%.2f", _'comp'.dist), ' км');
+	p ([[Скорость: ]], string.format("%.3f", _'comp'.speed), ' м/с');
 end
 
 -- эпизод 1
