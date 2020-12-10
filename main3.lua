@@ -19,7 +19,7 @@ game.dsc = [[{$fmt b|ЛУНА-9}^^Интерактивная новелла дл
 
 VerbExtend {
 	"#Talk",
-	"по {noun_obj}/телефон,дт : Ring",
+	"по {noun}/дт : Ring",
 	":Talk"
 }
 
@@ -36,35 +36,40 @@ Verb {
 	"#Answer",
 	"ответ/ить,отвеч/ать",
 	":Answer",
-	"{noun}/дт,live : Answer",
-	"на {ring} : Ring"
+	"{noun}/дт : Answer",
+	"на {ring} : Answer"
 }
 
 
 global 'last_talk' (false)
 
 function game:before_Ring(w)
-	if not have 'телефон' then
+	if (not w or w^'телефон') and not have 'телефон' then
 		p [[У тебя нет с собой телефона.]]
 		return
 	end
 	return false
 end
 function game:after_Ring(w)
-	p [[Тебе некому сейчас звонить.]]
+	if not w or w^'телефон' then
+		p [[Тебе некому сейчас звонить.]]
+		return
+	end
+	p (w:Noun(), " не телефон и не радио, чтобы говорить c ", w:it 'вн', " помощью.");
 end
+
 -- ответить
 function game:before_Answer(w)
 	if not w then
-		if isDaemon 'телефон' then
-			mp:xaction("Ring")
-			return
-		end
-		mp:xaction("Talk")
-		return
+		return false
 	end
 	mp:xaction("Talk", w)
 end
+
+function game:after_Answer(w)
+	mp:xaction("Talk", w)
+end
+
 -- говорить без указания объекта
 function game:before_Talk(w)
 	if w then
@@ -436,6 +441,10 @@ obj {
 	nam = 'belts';
 	-"ремни";
 	ClipOn = function(s)
+		if me():inside('кресло') then
+			p [[Ты уже пристёгнут.]]
+			return
+		end
 		mp:xaction("Enter", _'кресло')
 	end;
 	ClipOff = function(s)
@@ -469,9 +478,16 @@ room {
 			p [[Неяркий свет звёзд и тёмной стороны Луны освещают командный модуль.]]
 		end
 		p [[Корабль медленно вращается вокруг своей оси.]]
-		if dark_side() then
+		if not dark_side() then
 			p [[Ты видишь, как яркие солнечные лучи проникают сквозь иллюминаторы и скользят по стенам.]]
 		end
+	end;
+	before_Answer = function(s)
+		if _'#radio'.ack then
+			mp:xaction("Ring", _'#radio')
+			return
+		end
+		return false
 	end;
 	before_Wait = function(s)
 		update_comp(5 * 60) -- 5 min
@@ -498,12 +514,32 @@ room {
 	};
 	Careful {
 		nam = '#radio';
+		ack = false;
 		-"радио";
+		before_Ring = function(s)
+			if not s.ack then
+				if dark_side() then
+					p [[Пока корабль плывёт над обратной стороны Луны связь с ЦУП невозможна.]]
+				else
+					p [[Сейчас нет необходимости связываться с ЦУП.]]
+				end
+				return
+			end
+			if me():where() ~= _'кресло' then
+				p [[Сначала нужно вернуться в кресло.]]
+				return
+			end
+			pn [[-- Заря, Арго-3. Обстановка нормальная. Всё штатно. Начинаемся готовиться к манёвру.]]
+			p [[-- Вас понял, Арго-3. Приступайте.]]
+			s.ack = false
+			return
+		end;
 		daemon = function(s)
 			p [["Перемен, требуют наши сердца!..."^^]]
-			p [[-- "Арго", "Заря". Как слышно? Приём? Доложите обстановку.]]
+			p [[-- Арго-3, Заря. Как слышно? Приём? Доложите обстановку.]]
 			_'Александр'.sleep = false
 			_'Сергей'.sleep = false
+			s.ack = true
 			s:daemonStop()
 		end;
 	};
@@ -594,7 +630,7 @@ room {
 	obj {
 		nam = 'comp';
 		time = 0;
-		dist = 3112;
+		dist = 2570;
 		speed = 2.336;
 		otime = 0;
 		start = start_time;
