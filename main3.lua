@@ -554,9 +554,9 @@ room {
 			else
 			end
 		end;
-		['before_WakeOther,Attack,Touch'] = function(s)
+		['before_WakeOther,Attack,Touch,Talk'] = function(s)
 			if s.sleep then
-				p [[Пусть поспит ещё немного. ЦУП скоро разбудит его и Сашу по радио.]];
+				p [[Пусть поспит ещё немного. ЦУП скоро разбудит его и Сашу по радио. Пока ты можешь просто {$fmt em|подождать}.]];
 			else
 				return false
 			end
@@ -566,9 +566,9 @@ room {
 		nam = 'Александр';
 		-"Александр,Саша";
 		sleep = true;
-		['before_WakeOther,Attack,Touch'] = function(s)
+		['before_WakeOther,Attack,Touch,Talk'] = function(s)
 			if s.sleep then
-				p [[Пусть поспит ещё немного. ЦУП всё-равно скоро его разбудит.]];
+				p [[Пусть поспит ещё немного. ЦУП всё-равно скоро его разбудит. Пока ты можешь просто {$fmt em|подождать}.]];
 			else
 				return false
 			end
