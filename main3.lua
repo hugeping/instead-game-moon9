@@ -74,6 +74,28 @@ function game:after_Answer(w)
 	mp:xaction("Talk", w)
 end
 
+function game:before_Any(ev)
+	if ev == 'Jump' or ev == 'JumpOver' then
+		p [[В невесомости?]]
+		return
+	end
+	if _'скафандр':has'worn' and (ev == 'Taste' or
+		ev == 'Eat' or
+		ev == 'Kiss' or
+		ev == 'Talk') then
+		p [[В скафандре неудобно это делать.]];
+		return
+	end
+	if ev == "Ask" or ev == "Say" or ev == "Tell" or ev == "AskFor" or ev == "AskTo" then
+		if w then
+			p ([[Просто попробуйте поговорить с ]], w:noun'тв', ".")
+		else
+			p [[Попробуйте просто поговорить.]]
+		end
+		return
+	end
+	return false
+end
 -- говорить без указания объекта
 function game:before_Talk(w)
 	if w then
@@ -113,21 +135,14 @@ function mp:pre_input(str)
 	return str
 end
 
-function game:before_Any(ev, w)
-	if ev == "Ask" or ev == "Say" or ev == "Tell" or ev == "AskFor" or ev == "AskTo" then
-		if w then
-			p ([[Просто попробуйте поговорить с ]], w:noun'тв', ".")
-		else
-			p [[Попробуйте просто поговорить.]]
-		end
-		return
-	end
-	return false
-end
 -- класс для переходов
 Path = Class {
 	['before_Walk,Enter'] = function(s)
 		if mp:check_inside(std.ref(s.walk_to)) then
+			return
+		end
+		if _(s.walk_to):has 'door' then
+			mp:xaction("Enter", _(s.walk_to))
 			return
 		end
 		walk(s.walk_to)
@@ -194,7 +209,7 @@ function start()
 end
 -- https://kosmolenta.com/index.php/488-2015-01-15-moon-seven
 pl.description = function(s)
-	p [[Тебя зовут Борис.]];
+	p [[Тебя зовут Борис Громов. Тебе 43 года и ты -- космонавт.]];
 	if here() ^ 'home' then
 		p [[Ты очень напряжён и эмоционально измотан.]]
 	end
@@ -471,10 +486,43 @@ local start_time = 11 + 32*60 + 67*60*60;
 function dark_side()
 	return _'comp'.dist < 532 and (math.floor(_'comp'.otime / (33 * 60)) % 2 == 0)
 end
+
+door {
+	-"люк";
+	nam = 'люк';
+	found_in = { 'модуль', 'sect2' };
+	door_to = function(s)
+		if here() ^ 'модуль' then
+			return 'sect2';
+		end
+		return 'модуль'
+	end;
+	description = [[Этот люк связывает командный и служебный отсеки.]];
+	before_Open = function(s)
+		if here()^'sect2' and _'#дверь':has'open' and s:hasnt'open' then
+			p [[Нужно закрыть дверь в агрегатный отсек!]]
+			return
+		end
+		return false
+	end;
+	dsc = function(s)
+		if here() ^'модуль' then
+			return
+		else
+			p 'Люк в командный отсек '
+		end
+		if s:has'open' then
+			p 'открыт.'
+		else
+			p 'закрыт.'
+		end
+	end;
+}:attr 'static,openable';
+
 room {
 	nam = 'модуль';
-	-"модуль,корабль";
-	title = "Командный модуль";
+	-"командный отсек,корабль";
+	title = "Командный отсек";
 	rot = true;
 	reverse = false;
 	marsh = false;
@@ -482,9 +530,9 @@ room {
 	A = false;
 	dsc = function(s)
 		if not dark_side() then
-			p [[В командном модуле светло.]];
+			p [[В командном отсеке светло.]];
 		else
-			p [[Неяркий свет звёзд и пепельный свет Луны освещают командный модуль.]]
+			p [[Неяркий свет звёзд и пепельный свет Луны освещают командный отсек.]]
 		end
 		if s.rot then
 			p [[Корабль медленно вращается вокруг своей оси.]]
@@ -497,6 +545,14 @@ room {
 				p "."
 			end
 		end
+		p [[Позади кресел расположен люк.]]
+	end;
+	['before_Open,Close'] = function(s, w)
+		if w^'люк' and me():where() ^ 'кресло' then
+			p [[Из кресла ты не можешь сделать это.]]
+			return
+		end
+		return false
 	end;
 	before_Answer = function(s)
 		if _'#radio'.ack then
@@ -611,7 +667,7 @@ room {
 	};
 	Prop {
 		-"кресла/мн,ср|левое кресло|правое кресло";
-		description = [[В командном модуле установлены три кресла. Твоё кресло командира -- среднее.]];
+		description = [[В командном отсеке установлены три кресла. Твоё кресло командира -- среднее.]];
 	};
 	obj {
 		title = 'в кресле';
@@ -624,7 +680,8 @@ room {
 			place(me(), s)
 		end;
 		before_LetGo = function(s)
-			mp:xaction("ClipOff", _'belts')
+			p [[Тебе мешают ремни.]]
+		--	mp:xaction("ClipOff", _'belts')
 		end;
 		obj = { 'belts' };
 	}:attr 'supporter,open,concealed,enterable,static';
@@ -675,7 +732,7 @@ room {
 						-- Что?^
 						-- Нет гарантий, что при включении двигателя не откроется и клапан контура A, а тогда...^
 						-- Что делать?^
-						-- Сходить в служебный модуль и перекрыть клапан A.]]
+						-- Сходить в агрегатный модуль и перекрыть клапан A.]]
 					end
 					return
 				end
@@ -710,15 +767,6 @@ room {
 			end
 		end;
 	}:attr 'animate';
-	Path {
-		-"служебный модуль";
-		walk_to = 'sect2';
-		desc = [[Ты можешь выйти в служебный отсек.]]
-	};
-	door {
-		-"люк";
-		door_to = 'sect2';
-	}:attr 'static,openable,scenery';
 	obj {
 		nam = 'comp';
 		time = 0;
@@ -749,7 +797,7 @@ room {
 			update_comp()
 			if s.dist < 2200 and s:once'wake' then
 				DaemonStart '#radio'
-				p [[Внезапно, тишину командного модуля нарушает звук радио.^^
+				p [[Внезапно, тишину командного отсека нарушает звук радио.^^
 				"Вместо тепла зелень стекла^
 				Вместо огня дым!"...^^
 				Кто-то там в ЦУП решил быть оригинальным.]]
@@ -792,16 +840,108 @@ room {
 			p [[Похоже, всё в порядке.]]
 		end
 	};
+	Path {
+		-"служебный отсек";
+		desc = [[Ты можешь пойти в служебный отсек.]];
+		walk_to = 'люк';
+	};
 }
 room {
 	nam = 'sect2';
-	title = "служебный модуль";
-	-"служебный модуль";
+	title = "служебный отсек";
+	-"служебный отсек";
+	dsc = function(s)
+		p [[В служебном отсеке почти всё пространство занято различным оборудованием.]];
+	end;
+	out_to = '#дверь';
+	in_to = 'люк';
+	onexit = function(s, w)
+		if w ^ 'агрегатный отсек' and _'люк':has'open' then
+			p [[Агрегатный отсек не герметичен. Сначала следует закрыть люк командного отсека.]]
+			return false
+		end;
+		if w ^ 'модуль' and _'#дверь':has'open' then
+			p [[Следует сначала закрыть дверь в агрегатный отсек.]];
+			return false
+		end
+	end
 }: with {
-	Path { -"командный модуль",
-		desc = "Ты можешь вернуться в командный модуль.";
-		walk_to = 'модуль'
-	}
+	Prop { -"оборудование" };
+	door {
+		-"дверь";
+		nam = '#дверь';
+		["before_Open,Close"] = function(s)
+			if _'#lever'.on then
+				p [[Дверь заблокирована рычагом.]]
+				return
+			end
+			if mp.event == "Open" and _'люк':has'open' and s:hasnt 'open' then
+				p [[Агрегатный отсек не герметичен. Сначала нужно закрыть люк в командный отсек.]]
+				return
+			end
+			if _'скафандр':hasnt'worn' then
+				p [[Агрегатный отсек не герметичен!]]
+				return
+			end
+			return false
+		end;
+		description = function()
+			p [[Тяжёлая межотсечная дверь покрашена в желто-чёрные цвета. Это напоминает тебе об опасности. Агрегатный отсек не герметичен!]]
+			return false
+		end;
+		door_to = 'агрегатный отсек';
+	}:attr'static,scenery,openable';
+	Careful {
+		-"рычаг";
+		nam = '#lever';
+		on = true;
+		dsc = [[В стену встроен рычаг, блокирующий дверь в агрегатный отсек.]];
+		description = [[Рычаг покрашен в красный цвет, чтобы напоминать экипаж об опасности выхода в негерметичный агрегатный отсек.]];
+		['before_Push,Pull'] = function(s)
+			if _'#дверь':has 'open' then
+				p [[Сначала нужно закрыть дверь.]]
+				return
+			end
+			s.on = not s.on
+			if s.on then
+				p [[Ты заблокировал межотсечную дверь рычагом.]]
+			else
+				p [[Ты разблокировал межотсечную дверь рычагом.]]
+			end
+		end;
+	}:attr 'static,~scenery';
+	Path { -"агрегатный отсек,отсек,проход",
+		desc = function(s)
+			p "Ты можешь выйти в агрегатный отсек.";
+		end;
+		walk_to = '#дверь';
+	};
+	Careful {
+		-"скафандры";
+		description = [[Скафандры для выхода в открытый космос.]];
+		before_Take = "Зачем тебе все скафандры?";
+	}:attr'clothing,~scenery';
+	obj {
+		-"скафандр";
+		nam = 'скафандр';
+		dsc = function(s)
+			if s:inroom() ^ 'sect2' then
+				return
+			end
+			return false
+		end;
+		before_Disrobe = function(s)
+			if here() ^ 'sect2' and _'#дверь':has'open'
+				or here() ^ 'агрегатный отсек' then
+				p [[Без скафандра ты умрёшь!]]
+				return
+			end
+			return false
+		end;
+	}:attr'clothing';
+}
+room {
+	nam = 'агрегатный отсек';
 }
 function update_comp(delta)
 	local side = dark_side()
