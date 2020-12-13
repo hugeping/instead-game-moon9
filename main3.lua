@@ -459,14 +459,14 @@ end
 obj {
 	nam = 'belts';
 	-"ремни";
-	ClipOn = function(s)
+	["Worn,ClipOn"] = function(s)
 		if me():inside('кресло') then
 			p [[Ты уже пристёгнут.]]
 			return
 		end
 		mp:xaction("Enter", _'кресло')
 	end;
-	ClipOff = function(s)
+	["Disrobe,ClipOff"] = function(s)
 		p [[Ты расстёгиваешь ремни и выплываешь из кресла.]]
 		walkout 'модуль'
 	end;
@@ -499,6 +499,10 @@ door {
 	end;
 	description = [[Этот люк связывает командный и служебный отсеки.]];
 	before_Open = function(s)
+		if not _'модуль'.engine then
+			p [[Что ты забыл в служебном отсеке?]]
+			return
+		end
 		if here()^'sect2' and _'#дверь':has'open' and s:hasnt'open' then
 			p [[Нужно закрыть дверь в агрегатный отсек!]]
 			return
@@ -732,7 +736,7 @@ room {
 						-- Что?^
 						-- Нет гарантий, что при включении двигателя не откроется и клапан контура A, а тогда...^
 						-- Что делать?^
-						-- Сходить в агрегатный модуль и перекрыть клапан A.]]
+						-- Сходить в агрегатный модуль и перекрыть предохранительный клапан контура A.]]
 					end
 					return
 				end
@@ -916,11 +920,7 @@ room {
 		end;
 		walk_to = '#дверь';
 	};
-	Careful {
-		-"скафандры";
-		description = [[Скафандры для выхода в открытый космос.]];
-		before_Take = "Зачем тебе все скафандры?";
-	}:attr'clothing,~scenery';
+
 	obj {
 		-"скафандр";
 		nam = 'скафандр';
@@ -939,6 +939,12 @@ room {
 			return false
 		end;
 	}:attr'clothing';
+
+	Careful {
+		-"скафандры";
+		description = [[Скафандры для выхода в открытый космос.]];
+		before_Take = "Зачем тебе все скафандры?";
+	}:attr'clothing,~scenery';
 }
 room {
 	nam = 'агрегатный отсек';
