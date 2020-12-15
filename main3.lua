@@ -6,6 +6,7 @@ require "fmt"
 fmt.dash = true
 fmt.quotes = true
 require 'parser/mp-ru'
+require 'snapshots'
 
 mp.msg.UNKNOWN_OBJ = function(w)
 	if not w then
@@ -405,7 +406,18 @@ cutscene {
 	};
 	next_to = 'title'
 }
-mp.msg.TITLE_INSIDE = "{#if_has/#where,container,в,на} {#where/пр,2}";
+cutscene {
+	nam = 'badend1';
+	title = 'Луна-9';
+	text = [[Экипаж "Арго-3" не сумел выйти на лунную орбиту за время облёта обратной
+	стороны Луны. Корабль продолжил своё движение и направился обратно к Земле...^^
+	Но всё могло быть по-другому.]];
+	onexit = function(s)
+		snapshots:restore()
+		mp:clear()
+	end;
+}
+-- mp.msg.TITLE_INSIDE = "{#if_has/#where,container,в,на} {#where/пр,2}";
 cutscene {
 	nam = 'title';
 	title = "Луна-9";
@@ -420,6 +432,7 @@ cutscene {
 		p [[Ты медленно пробуждаешься. Пристёгнутый к креслу в довольно неудобной для сна позе, ты несколько секунд смотришь сквозь носовые иллюминаторы. Часть обзора загораживает посадочный модуль. А на фоне его ты видишь яркую, заполняющую всё Луну.^^
 	Слева и справа от тебя, к своим креслам пристёгнуты Александр и Сергей. Они ещё спят.]];
 		DaemonStart 'comp'
+		snapshots:make()
 	end
 }
 
@@ -532,6 +545,7 @@ room {
 	marsh = false;
 	engine = false;
 	A = false;
+	B = false;
 	dsc = function(s)
 		if not dark_side() then
 			p [[В командном отсеке светло.]];
@@ -737,6 +751,9 @@ room {
 				if s:where().engine then
 					if not s:where().A then
 						p [[-- Сергей, что происходит?^-- Какая-то проблема. Что на компьютере?^-- Сейчас посмотрю!]];
+					elseif _'клапан'.on then
+						p [[-- Предохранительный клапан закрыт.^
+						-- Хорошо, я переключился на топливный контур B. Можно пробовать запустить двигатель...]];
 					else
 						p [[-- Проблема с клапаном подачи топлива!^
 						-- Возможно, короткое замыкание в контуре! Я могу переключиться на контур B, только...^
@@ -781,6 +798,7 @@ room {
 	obj {
 		nam = 'comp';
 		time = 0;
+		badend = false;
 		dist = 2570;
 		speed = 2.536;
 		otime = 0;
@@ -812,6 +830,9 @@ room {
 				"Вместо тепла зелень стекла^
 				Вместо огня дым!"...^^
 				Интересно, кто в ЦУП поставил эту песню?]]
+			end
+			if s.badend then
+				walk 'badend1'
 			end
 		end;
 	}:attr'static':with {
@@ -996,8 +1017,10 @@ room {
 			p [[Ты с трудом поворачиваешь ручку клапана.]]
 			if s.on then
 				p [[Теперь он перекрыт.]]
+				_'модуль'.B = true
 			else
 				p [[Теперь он открыт.]]
+				_'модуль'.B = false
 			end
 		end;
 		description = function(s)
@@ -1060,6 +1083,9 @@ function update_comp(delta)
 			p [[Корабль вошёл в тень Луны. Яркий солнечный свет перестал проникать сквозь иллюминаторы.]]
 		else
 			p [[Корабль вышел из тени Луны. Яркий солнечный свет залил всё вокруг.]];
+			if _'comp'.speed > 2.0 then
+				_'comp'.badend = true
+			end
 		end
 	end
 end
@@ -1074,7 +1100,11 @@ function show_stats(flt)
 	pn ([[Скорость: ]], string.format("%.3f", _'comp'.speed), ' км/с');
 	if _'модуль'.engine then
 		_'модуль'.A = true
-		p [[Клапан подачи топлива, контур A: ошибка]]
+		if _'модуль'.B then
+			p [[Подача топлива: через контур B]];
+		else
+			p [[Клапан подачи топлива, контур A: ошибка]]
+		end
 	end
 	if _'comp'.prog then
 		local progs = {
