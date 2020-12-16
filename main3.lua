@@ -637,6 +637,7 @@ room {
 					p [[Пока корабль плывёт над обратной стороной Луны связь с ЦУП невозможна.]]
 				else
 					if _'comp'.speed < 2 then
+						s:daemonStop()
 						walk 'stage2'
 						return
 					end
