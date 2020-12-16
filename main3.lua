@@ -627,7 +627,7 @@ room {
 					p [[Пока корабль плывёт над обратной стороной Луны связь с ЦУП невозможна.]]
 				else
 					if _'comp'.speed < 2 then
-						p [[TODO]]
+						walk 'stage2'
 						return
 					end
 					p [[Сейчас нет необходимости связываться с ЦУП.]]
@@ -641,7 +641,7 @@ room {
 			pn [[-- Заря, Арго-3. Обстановка нормальная. Всё штатно. Готовимся к манёвру.]]
 			p [[-- Вас понял, Арго-3. Приступайте.]]
 			s.ack = false
-			s:daemonStop()
+			-- s:daemonStop()
 			return
 		end;
 		daemon = function(s)
@@ -657,11 +657,22 @@ room {
 				s.ack = true
 				return
 			end
+			if dark_side() then
+				return
+			end
+			if time() % 3 ~= 1 or not me():inroom()^'модуль' then
+				return
+			end
 			if s.ack then
-				if not dark_side() and time() % 3 == 1 and me():inroom()^'модуль' then
-					pn [[-- Арго-3, Заря. Как слышно? Почему не выходите на связь?]]
-					p [[-- Командир, надо {$fmt em|ответить}! -- беспокоится Александр.]]
+				pn [[-- Арго-3, Заря. Как слышно? Почему не выходите на связь?]]
+				p [[-- Командир, надо {$fmt em|ответить}! -- беспокоится Александр.]]
+				return
+			end
+			if _'comp'.speed < 2 then
+				if s:once 'stage2' then
+					pn [[Вдруг, радио оживает и пространство отсека наполняется звуком позывных с ЦУП.]]
 				end
+				pn [[-- Арго-3, Заря! Ответьте!]]
 			end
 		end;
 	};
@@ -1121,13 +1132,15 @@ function update_comp(delta)
 		end
 	end
 end
-
-function show_stats(flt)
-	flt = flt or _'comp'.fltime
+function get_time(flt)
+	local flt = _'comp'.fltime
 	local sec = flt % 60
 	local min = math.floor(flt / 60 % 60)
 	local hh = math.floor(flt / 60 / 60)
-	pn ([[Время полёта: ]], hh, " час. ", min, " мин. ", sec, " сек.")
+	return  string.format("%d  час. %d мин. %d сек.", hh, min, sec)
+end
+function show_stats()
+	pn ([[Время полёта: ]], get_time())
 	pn ([[Расстояние: ]], string.format("%.2f", _'comp'.dist), ' км');
 	pn ([[Скорость: ]], string.format("%.3f", _'comp'.speed), ' км/с');
 	if _'модуль'.engine then
@@ -1148,7 +1161,26 @@ function show_stats(flt)
 		pn [[Ты видишь, что кнопка "выполнить" подсвечена красным.]]
 	end
 end
-
+cutscene {
+	nam = 'stage2';
+	title = 'Командный отсек';
+	text = {
+	[[-- Заря, Арго на связи!]],
+	[[-- Ох, ребята! До чего же мы рады вас слышать!]],
+	[[...]],
+	};
+	next_to = 'moonmod';
+	exit = function()
+		_'comp'.time = _'comp'.time + 167*60
+		pn [[Прошло 2 часа 47 минут...]]
+		p ([[Полётное время: ]], get_time())
+	end;
+}
+room {
+	nam = 'moonmod';
+	title = 'лунный модуль';
+	-"модуль";
+}
 -- эпизод 1
 -- вход в тень Луны, видны звёзды
 -- просыпается. Остальные спят.
