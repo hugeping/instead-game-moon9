@@ -74,9 +74,12 @@ end
 function game:after_Answer(w)
 	mp:xaction("Talk", w)
 end
-
+global 'gravity' ('earh')
 function game:before_Any(ev)
 	if ev == 'Jump' or ev == 'JumpOver' then
+		if gravity then
+			return
+		end
 		p [[В невесомости?]]
 		return
 	end
@@ -210,7 +213,13 @@ function start()
 end
 -- https://kosmolenta.com/index.php/488-2015-01-15-moon-seven
 pl.description = function(s)
-	p [[Тебя зовут Борис Громов. Тебе 43 года и ты -- космонавт.]];
+	p [[Тебя зовут Борис Громов.]]
+	if not here() ^ 'home' then
+		p [[Тебе 43 года и ты -- космонавт.]];
+	end
+	if _'скафандр':has'worn' then
+		p [[На тебе надет скафандр.]]
+	end
 	if here() ^ 'home' then
 		p [[Ты очень напряжён и эмоционально измотан.]]
 	end
@@ -433,6 +442,7 @@ cutscene {
 	Слева и справа от тебя, к своим креслам пристёгнуты Александр и Сергей. Они ещё спят.]];
 		DaemonStart 'comp'
 		snapshots:make()
+		gravity = false
 	end
 }
 
@@ -1006,6 +1016,13 @@ room {
 			end
 			return false
 		end;
+		description = function(s)
+			if s:has'worn' then
+				p [[Скафандр в полном порядке.]]
+				return
+			end
+			p [[Ослепительно белый скафандр для выхода в открытый космос.]]
+		end;
 		before_Disrobe = function(s)
 			if here() ^ 'sect2' and _'#дверь':has'open'
 				or here() ^ 'агрегатный отсек' then
@@ -1174,12 +1191,55 @@ cutscene {
 		_'comp'.time = _'comp'.time + 167*60
 		pn [[Прошло 2 часа 47 минут...]]
 		p ([[Полётное время: ]], get_time())
+		take 'скафандр'
+		_'скафандр':attr'worn'
 	end;
 }
 room {
 	nam = 'moonmod';
 	title = 'лунный модуль';
-	-"модуль";
+	-"модуль|кабина";
+	dsc = function(s)
+		p [[Ты вместе с Александром, облачённые в скафандры, находитесь в кабине лунного модуля.]]
+	end;
+}:with {
+	obj {
+		-"Александр,Саша/мр";
+		nam = 'alex';
+		description = function(s)
+			p [[TODO]]
+		end;
+	}:attr'animate';
+	obj {
+		-"Сергей,Серёжа";
+		nam = '#serg';
+		description = [[Сергей не выглядит весёлым. Всё то время, пока ситуация на "Луна-9" не прояснится, ему придётся ждать на орбите. А затем, если не потребуется экстренная эвакуация, Сергею предстоит одинокое возвращение на Землю.]];
+		before_Talk = function(s)
+			p [[-- Не скучай, Серёжа!^
+			-- Для первого полёта я уже получил массу впечатлений.^
+			-- Ладно, до связи!]]
+		end;
+	}:attr'animate,scenery';
+	obj {
+		-"люк";
+		nam = '#люк';
+		dsc = function(s)
+			if s:has'open' then
+				p [[В открытый стыковочный люк заглядывает Сергей.]]
+			else
+				p [[Стыковочный люк закрыт.]]
+			end
+		end;
+		description = function(s)
+			p [[Небольшой круглый люк связывает командный модуль с лунным модулем. Было непросто протиснуться в него! К счастью, это не надо делать часто.]];
+			return false
+		end;
+		before_Close = function(s)
+			disable '#serg'
+			return false
+		end;
+		before_Enter = [[О командном модуле позаботится Сергей.]];
+	}:attr'openable,open,static';
 }
 -- эпизод 1
 -- вход в тень Луны, видны звёзды
