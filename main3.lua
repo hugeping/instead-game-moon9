@@ -883,6 +883,7 @@ room {
 	}:attr'static':with {
 		Careful {
 			-"кнопка";
+			description = [[Заметная красная кнопка прямоугольной формы.]];
 			before_Push = function(s)
 				local prog = _'comp'.prog
 				if prog == 1 then
@@ -1211,14 +1212,66 @@ room {
 	title = 'лунный модуль';
 	-"модуль|кабина";
 	dsc = function(s)
-		p [[Ты вместе с Александром, облачённые в скафандры, находитесь в кабине лунного модуля.]]
+		if s:once 'first' then
+			p [[Ты и Александр, облачённые в скафандры, находитесь в кабине лунного модуля.]]
+		else
+			p [[Ты находишься в кабине лунного модуля.]]
+		end
+		_'#win':dsc()
 	end;
 }:with {
+	Ephe { -"космос", description = [[Ты никогда не привыкнешь к этому зрелищу. Одновременно пугающему и прекрасному.]] };
+	Careful {
+		nam = '#win';
+		-"окна|окно";
+		dsc = function()
+			if gravity then
+				p [[Сквозь трапециевидные окна виден лунный пейзаж.]]
+			else
+				p [[Сквозь трапециевидные окна виден бездонный, чёрный космос.]]
+			end
+		end;
+		description = function(s)
+			p [[Окна лунного модуля достаточно большие и обеспечивают неплохой обзор.]]
+		end;
+	};
+	Careful {
+		nam = '#panel';
+		-"панель управления,панель";
+		prog = 1;
+		description = function(s)
+			local progs = {
+				"расстыковка";
+			}
+			if s.prog then
+				pn ("Программа: ", progs[s.prog])
+				if _'#люк':has'open' then
+					pn ("Внимание! Стыковочный люк: открыт")
+				end
+			end
+			p ("На панели ты видишь кнопку запуска программы.")
+		end;
+	};
+	Careful {
+		nam = '#button';
+		-"кнопка";
+		description = [[Красная кнопка запуска хорошо заметна на панели управления.]];
+	};
 	obj {
 		-"Александр,Саша/мр";
 		nam = 'alex';
+		state = 1;
+		daemon = function(s)
+		end;
+		dsc = function(s)
+			if s.state == 1 then
+				p [[Александр возится у пульта управления.]];
+			else
+				p [[Здесь находится Александр.]]
+			end
+		end;
 		description = function(s)
-			p [[Александр уже занял своё место у пульта управления.]]
+			p [[В скафандрах все космонавты похожи друг на друга.]]
 		end;
 	}:attr'animate';
 	obj {
@@ -1247,6 +1300,7 @@ room {
 		end;
 		before_Close = function(s)
 			disable '#serg'
+			DaemonStart 'alex'
 			return false
 		end;
 		before_Enter = [[О командном модуле позаботится Сергей.]];
