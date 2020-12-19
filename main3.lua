@@ -75,7 +75,7 @@ function game:after_Answer(w)
 	mp:xaction("Talk", w)
 end
 global 'gravity' ('earh')
-function game:before_Any(ev)
+function game:before_Any(ev, w)
 	if ev == 'Jump' or ev == 'JumpOver' then
 		if gravity then
 			return
@@ -87,6 +87,11 @@ function game:before_Any(ev)
 		ev == 'Eat' or
 		ev == 'Kiss' or
 		ev == 'Talk') then
+		if ev == 'Talk' and _'скафандр'.radio then
+			if w ^ 'Беркут' or w ^ 'Арго' or w ^ 'Заря' then
+				return false
+			end
+		end
 		p [[В скафандре неудобно это делать.]];
 		return
 	end
@@ -224,6 +229,8 @@ pl.description = function(s)
 		p [[Ты очень напряжён и эмоционально измотан.]]
 	end
 end
+pl.scope = std.list {}
+
 function clamp(v, l)
 	if v > l then v = l end
 	return v
@@ -905,7 +912,7 @@ room {
 					end
 					if _'модуль'.B then
 						_'comp'.speed = 1.6
-						p [[Не без опаски ты нажал на кнопку активации. Послышался низкий гул маршевого двигателя. Все, затаив дыхание, ждали. Наконец, отработов положенное время, двигатель отключился и вновь наступила тишина.]]
+						p [[Не без опаски ты нажал на кнопку активации. Послышался низкий гул маршевого двигателя. Все, затаив дыхание, ждали. Наконец, отработав положенное время, двигатель отключился и вновь наступила тишина.]]
 						_'comp'.prog = false
 						return
 					end
@@ -1021,6 +1028,8 @@ room {
 	obj {
 		-"скафандр";
 		nam = 'скафандр';
+		radio = false;
+		scope = { };
 		dsc = function(s)
 			if s:inroom() ^ 'sect2' then
 				return
@@ -1211,6 +1220,15 @@ room {
 	nam = 'moonmod';
 	title = 'лунный модуль';
 	-"модуль|кабина";
+	['before_Answer,Ring'] = function()
+		if _'скафандр':has'worn' then
+			if _'скафандр'.radio then
+				p [[Для того чтобы поговорить по радио, просто попробуйте поговорить с Зарёй, Беркутом или Арго.]];
+				return
+			end
+		end
+		return false
+	end;
 	dsc = function(s)
 		if s:once 'first' then
 			p [[Ты и Александр, облачённые в скафандры, находитесь в кабине лунного модуля.]]
@@ -1256,16 +1274,70 @@ room {
 		nam = '#button';
 		-"кнопка";
 		description = [[Красная кнопка запуска хорошо заметна на панели управления.]];
+		before_Push = function()
+			if _'alex'.state == 2 then
+				p [[TODO]]
+			elseif _'alex'.state == 1 then
+				p [[Рано начинать расстыковку.]]
+			else
+				return false
+			end
+		end;
 	};
 	obj {
 		-"Александр,Саша/мр";
 		nam = 'alex';
 		state = 1;
+		radio = -1;
 		daemon = function(s)
+			local radio = {
+				"-- Проверка радиосвязи! -- голос Александра прозвучал непривычно близко. -- Арго, я Беркут. Как слышно?",
+				"-- Беркут, я Аргро. Связь отличная. -- это отозвался Сергей из командного модуля. -- Проверяем связь с ЦУП. -- Заря, это Арго. Как связь?";
+				"-- ... Арго, Заря. Слышу вас хорошо! -- ответ от Земли пришёл с заметной задержкой.";
+				"-- Ястреб, я Беркут. Как связь? -- Александр ожидающе смотрит на тебя сквозь защитное стекло скафандра.";
+			}
+			if (s.ack or _'Арго'.ack or _'Заря'.ack) and time() % 4 == 1 then
+				if _'скафандр':hasnt'worn' then
+					return
+				end
+				if s.ack then
+					p [[-- Ястреб, я Беркут. Ответьте! -- слышишь ты голос Александра по радиосвязи.]]
+				elseif _'Арго'.ack then
+					p [[-- Ястреб, я Арго. Ответь, командир!]]
+				elseif _'Заря'.ack then
+					p [[-- Ястреб, Ястреб. Я Заря. Как слышно?]]
+				end
+				return
+			end
+			if s.radio then
+				s.radio = s.radio + 1
+				if _'скафандр':hasnt'worn' and s.radio > 0 then
+					p [[Александр машет тебе правой рукой и стучит левой по своему шлему. Нужно проверить связь.]]
+					s.radio = s.radio - 1
+					return
+				end
+				if s.radio < 1 then
+					return
+				end
+				p (radio[s.radio])
+				if s.radio == #radio then
+					_'Беркут'.ack = true
+					_'Заря'.ack = true
+					_'Арго'.ack = true
+					s.radio = false
+				end
+				return
+			elseif not s.ack and not _'Заря'.ack and not _'Арго'.ack and s.state == 1 then
+				s.state = 2
+				p "-- Ястреб, Заря. Начинайте расстыковку."
+				_'Заря'.ack = "-- Заря, я Ястреб. Начинаем расстыковку."
+			end
 		end;
 		dsc = function(s)
 			if s.state == 1 then
 				p [[Александр возится у пульта управления.]];
+			elseif s.state == 2 then
+				p [[Александр занял своё место у пульта.]]
 			else
 				p [[Здесь находится Александр.]]
 			end
@@ -1300,11 +1372,74 @@ room {
 		end;
 		before_Close = function(s)
 			disable '#serg'
+			_'скафандр'.radio = true
 			DaemonStart 'alex'
+			me().scope:add 'Беркут'
+			me().scope:add 'Заря'
+			me().scope:add 'Арго'
 			return false
 		end;
 		before_Enter = [[О командном модуле позаботится Сергей.]];
 	}:attr'openable,open,static';
+}
+Ephe {
+	-"Беркут";
+	ack = false;
+	nam = 'Беркут';
+	before_Talk = function(s)
+		if s.ack then
+			p "-- Беркут, я Ястреб. Связь в норме."
+			s.ack = false
+			return
+		end
+		if _'alex'.radio then
+			p "Ты не стал перебивать Александра."
+			return
+		end
+		if _'alex':visible() then
+			p [[-- ]]
+		else
+			p [[-- Беркут, я Ястреб. Как обстановка?^-- Ястреб, Беркут. Всё в порядке.]]
+		end
+	end;
+}
+Ephe {
+	-"Заря";
+	ack = false;
+	nam = 'Заря';
+	before_Talk = function(s)
+		if _'alex'.radio then
+			p "Ты не стал перебивать Александра."
+			return
+		end
+		if s.ack then
+			if type(s.ack) == 'string' then
+				p(s.ack)
+			else
+				p "-- Заря, Ястреб на связи.^-- ... Ястреб, Заря. Принято."
+			end
+			s.ack = false
+			return
+		end
+		p [[Сейчас нет необходимости связываться с Землёй.]]
+	end;
+}
+Ephe {
+	-"Арго";
+	nam = 'Арго';
+	ack = false;
+	before_Talk = function(s)
+		if _'alex'.radio then
+			p "Ты не стал перебивать Александра."
+			return
+		end
+		if s.ack then
+			p "-- Арго, Ястреб на связи.^-- Ястреб, Арго. Принято!"
+			s.ack = false
+			return
+		end
+		p "Сейчас нет необходимости связываться с Сергеем."
+	end;
 }
 -- эпизод 1
 -- вход в тень Луны, видны звёзды
