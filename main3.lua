@@ -45,6 +45,10 @@ Verb {
 	"на {ring} : Answer"
 }
 
+Verb {
+	"разобрать,разбер/и",
+	"{noun}/вн : Attack",
+}
 
 global 'last_talk' (false)
 
@@ -1221,6 +1225,18 @@ cutscene {
 		_'скафандр':attr'worn'
 	end;
 }
+
+room {
+	nam = 'moontech';
+	u_to = 'moonmod';
+}:with {
+	Path {
+		-"технический отсек",
+		desc = "Ты можешь спуститься в технический отсек.",
+		walk_to = 'moontech'
+	};
+}
+
 room {
 	nam = 'moonmod';
 	title = 'лунный модуль';
@@ -1234,6 +1250,7 @@ room {
 		end
 		return false
 	end;
+	d_to = 'moontech';
 	before_Listen = function(s)
 		if _'alex'.state == 3 then
 			p [[Ты слышишь аварийный сигнал бортового компьютера.]]
@@ -1248,8 +1265,10 @@ room {
 			p [[Ты находишься в кабине лунного модуля.]]
 		end
 		_'#win':dsc()
+		p [[Ты можешь спуститься вниз в технический отсек.]]
 	end;
 }:with {
+	Path { -"технический отсек", desc = "Ты можешь спуститься в технический отсек.", walk_to = 'moontech' };
 	Ephe { -"космос", description = [[Ты никогда не привыкнешь к этому зрелищу. Одновременно пугающему и прекрасному.]] };
 	Careful {
 		nam = '#win';
