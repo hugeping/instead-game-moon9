@@ -21,6 +21,7 @@ game.dsc = [[{$fmt b|ЛУНА-9}^^Интерактивная новелла дл
 VerbExtend {
 	"#Talk",
 	"по {noun}/дт : Ring",
+	"по {noun}/дт с {noun}/тв,scene : Ring",
 	":Talk"
 }
 VerbExtendWord {
@@ -92,6 +93,9 @@ function game:before_Any(ev, w)
 		ev == 'Kiss' or
 		ev == 'Talk') then
 		if ev == 'Talk' and _'скафандр'.radio then
+			if not w then
+				return false
+			end
 			if w ^ 'Беркут' or w ^ 'Арго' or w ^ 'Заря' then
 				return false
 			end
@@ -1047,6 +1051,10 @@ room {
 			end
 			p [[Ослепительно белый скафандр для выхода в открытый космос.]]
 		end;
+		after_Wear = function(s)
+			enable 'радио'
+			return false
+		end;
 		before_Disrobe = function(s)
 			if here() ^ 'sect2' and _'#дверь':has'open'
 				or here() ^ 'агрегатный отсек' then
@@ -1059,7 +1067,17 @@ room {
 			end
 			return false
 		end;
-	}:attr'clothing';
+		after_Disrobe = function()
+			disable 'радио'
+			return false
+		end;
+	}:attr'clothing':with {
+		Careful { -"радио"; nam = 'радио';
+			description = "Радио встроено в скафандр.";
+				before_Ring = function(s, w)
+				mp:xaction("Talk", w)
+			end }:disable();
+	};
 
 	Careful {
 		-"скафандры";
@@ -1430,7 +1448,7 @@ room {
 			end
 		end;
 		description = function(s)
-			if not disabled '#locks' then
+			if not disabled 'locks' then
 				p [[^Ты можешь осмотреть стыковочные замки.]]
 			else
 				p [[Небольшой круглый люк связывает командный модуль с лунным модулем. Было непросто протиснуться в него! К счастью, это не надо делать часто.]];
@@ -1439,7 +1457,7 @@ room {
 		end;
 		before_Open = function(s)
 			if _'alex'.state == 3 then
-				_'#locks':enable()
+				_'locks':enable()
 			end
 			return false
 		end;
@@ -1459,11 +1477,11 @@ room {
 		end;
 	}:attr'openable,open,static':with {
 		Careful {
-			nam = '#locks';
+			nam = 'locks';
 			-"стыковочные замки|замки";
 			description = function(s)
 				p [[Двенадцать стыковочных замков установлены по периметру стыковочного узла.]];
-				if not disabled '#lock' then
+				if not disabled 'lock' then
 					p [[Твоё внимание привлекает замок номер 3.]]
 				else
 					p [[По внешнему виду замков невозможно определить неполадки, даже если они и есть.]]
@@ -1472,7 +1490,7 @@ room {
 		}:disable():with {
 			Prop { -"узел" };
 			Careful {
-				nam = '#lock';
+				nam = 'lock';
 				-"стыковочный замок|замок";
 				description = [[Судя по телеметрии, проблема именно в этом замке.]];
 			}:disable();
@@ -1495,7 +1513,7 @@ Ephe {
 		end
 		if _'alex'.state == 3 then
 			p [[-- Беркут, ты выяснил в чём проблема?^-- 3-й стыковочный замок не отвечает и автоматика прекращает процесс расстыковки!]]
-			_'#lock':enable()
+			_'lock':enable()
 			return
 		end
 		if _'alex':visible() then
@@ -1527,7 +1545,7 @@ Ephe {
 			pn "-- Заря, я Ястреб. Расстыковка не состоялась."
 			pn "-- Ястреб, я Заря. Мы изучаем телеметрию. Нет данных по З-му стыковочному замку. Вероятно, проблема в нём. Попробуйте закоротить."
 			pn "-- Заря, Ястреб. Вас понял, приступаю."
-			_'#lock':enable()
+			_'lock':enable()
 			return
 		end
 		p [[Сейчас нет необходимости связываться с Землёй.]]
