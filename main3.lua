@@ -641,7 +641,8 @@ room {
 	Careful {
 		nam = '#radio';
 		ack = false;
-		-"радио,ЦУП,аря";
+		-"радио,ЦУП|Заря";
+		description = [[Радио невозможно увидеть. Оно встроено в корабль.]];
 		before_SwitchOff = [[Не стоит этого делать.]];
 		["before_SwitchOn,Talk"] = function(s)
 			mp:xaction("Ring", s)
