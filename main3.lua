@@ -46,11 +46,26 @@ Verb {
 	"на {ring} : Answer"
 }
 
+VerbExtend {
+	"#Attack",
+	"{noun}/вн {noun}/тв,held : Attack"
+}
+
 Verb {
 	"разобрать,разбер/и",
 	"{noun}/вн : Attack",
+	"{noun}/вн {noun}/тв,held : Attack",
 }
-
+game:dict {
+	["шуруповёрт/мр,С,но"] = {
+		"шуруповёрт/им",
+		"шуруповёрт/вн",
+		"шуруповёрта/рд",
+		"шуруповёрту/дт",
+		"шуруповёртом/тв",
+		"шуруповёрте/пр",
+	}
+}
 global 'last_talk' (false)
 
 function game:before_Ring(w)
@@ -180,7 +195,7 @@ Careful = Class {
 	ev == 'Listen' or ev == 'Smell' then
 			return false
 		end
-		p ("Лучше оставить ", s:noun 'вн', " в покое.")
+		p ("Лучше быть с ", s:noun 'тв', " поосторожнее.")
 	end;
 }:attr 'scenery'
 
@@ -211,7 +226,7 @@ Furniture = Class {
 
 Prop = Class {
 	before_Default = function(s, ev)
-		p ("Тебе нет дела до ", s:noun 'рд', ".")
+		p ("Лучше оставить ", s:noun 'вн', " в покое.")
 	end;
 }:attr 'scenery'
 
@@ -1545,8 +1560,36 @@ room {
 			Careful {
 				nam = 'lock';
 				-"стыковочный замок|замок|корпус";
-				description = [[Судя по телеметрии, проблема именно в этом замке. Замок закрыт корпусом.]];
-			}:disable();
+				description = function(s)
+					p [[Судя по телеметрии, проблема именно в этом замке.]]
+					if s:hasnt'open' then
+						p [[Замок закрыт корпусом.]];
+					else
+						p [[Ты рассматриваешь механизм.]]
+						return false
+					end
+				end;
+				['before_Open,Unlock,Attack'] = function(s, w)
+					if s:has'open' then
+						p [[Уже вскрыт.]]
+						return
+					end
+					if not w then
+						p [[Чем? Голыми руками это не получится.]]
+						return
+					end
+					if not have(w) then
+						p ([[Но у тебя с собой нет ]], w:noun'рд', [[!]])
+						return
+					end
+					if not w ^ 'screw' then
+						p ([[Идея интересная, но ]], w:noun(), [[ здесь не поможет.]])
+						return
+					end
+					s:attr'open'
+					p [[Ты вскрываешь корпус 3-го замка дрелью-шуруповёртом.]]
+				end;
+			}:attr'container,openable':disable();
 		}
 	}
 }
