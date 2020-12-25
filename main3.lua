@@ -1483,8 +1483,13 @@ room {
 				if not docking then
 					p [[Хочешь протаранить Арго?]]
 				else
-					docking = false
-					p [[Ты толкнул ручку от себя. Маневровые двигатели включились, дав импульс модулю на причаливание.]]
+					p [[Ты толкнул ручку от себя.]]
+					if not turned then
+						docking = false
+						p [[Маневровые двигатели включились, дав импульс модулю на причаливание.]]
+					else
+						p [[Маневровые двигатели включились, дав импульс модулю на дальнейшее расхождение с Арго.]]
+					end
 				end
 			end;
 			before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
