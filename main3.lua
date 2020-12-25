@@ -7,6 +7,13 @@ fmt.dash = true
 fmt.quotes = true
 require 'parser/mp-ru'
 require 'snapshots'
+mp.msg.Enter.EXITBEFORE = function()
+	if me():where() ^'place' then
+		p [[Но ты пристёгнут ремнями!]]
+		return
+	end
+	p "Сначала нужно {#if_has/#where,supporter,слезть с {#where/рд}.,покинуть {#where/вн}.}"
+end
 
 mp.msg.UNKNOWN_OBJ = function(w)
 	if not w then
@@ -106,7 +113,7 @@ function game:before_Any(ev, w)
 	if _'скафандр':has'worn' and (ev == 'Taste' or
 		ev == 'Eat' or
 		ev == 'Kiss' or
-		ev == 'Talk') then
+		ev == 'Talk' or ev == 'Smell') then
 		if ev == 'Talk' and _'скафандр'.radio then
 			if not w then
 				return false
@@ -492,7 +499,7 @@ Verb {
 
 function mp:ClipOff(w)
 	if not w or w == me() then
-		if not seen 'belts' then
+		if not _'belts':visible() then
 			p [[Ты не видишь здесь ремней.]]
 			return
 		end
@@ -511,20 +518,30 @@ function mp:ClipOn(w)
 end
 obj {
 	nam = 'belts';
-	-"ремни";
+	-"ремни|ремень";
 	["Worn,ClipOn"] = function(s)
-		if me():inside('кресло') then
+		if me():inside('кресло') or me():inside('place') then
 			p [[Ты уже пристёгнут.]]
 			return
 		end
-		mp:xaction("Enter", _'кресло')
+		if here()^'moonmod' then
+			mp:xaction("Enter", _'place')
+		else
+			mp:xaction("Enter", _'кресло')
+		end
 	end;
 	["Disrobe,ClipOff"] = function(s)
-		p [[Ты расстёгиваешь ремни и выплываешь из кресла.]]
-		walkout 'модуль'
+		if here()^'moonmod' then
+			p [[Ты расстёгиваешь ремни и покидаешь стойку.]]
+			walkout 'moonmod'
+		else
+			p [[Ты расстёгиваешь ремни и выплываешь из кресла.]]
+			walkout 'модуль'
+		end
 	end;
 	description = function(s)
-		if where(me()) ^ 'кресло' then
+		p [[Крепкие надёжные ремни, с помощью которых космонавты фиксируют своё положение во время полёта.]]
+		if where(me()) ^ 'кресло' or where(me()) ^ 'place' then
 			p [[Ремни застёгнуты.]]
 		else
 			p [[Ремни расстёгнуты.]]
@@ -1332,7 +1349,7 @@ room {
 
 room {
 	nam = 'moonmod';
-	title = 'лунный модуль (кабина)';
+	title = 'лунный модуль';
 	-"модуль|кабина";
 	['before_Answer,Ring'] = function()
 		if _'скафандр':has'worn' then
@@ -1344,6 +1361,16 @@ room {
 		return false
 	end;
 	d_to = 'moontech';
+	before_Any = function(s, ev, w)
+		if ev == 'Exam' or ev == 'Smell' or ev == 'Listen' or ev == 'Look' or ev == 'Search' then
+			return false
+		end
+		if w and  w ^ '#люк' and me():where()^'place' then
+			p [[Ты пристёгнут ремнями.]]
+			return
+		end
+		return false
+	end;
 	before_Listen = function(s)
 		if _'alex'.state == 3 then
 			p [[Ты слышишь аварийный сигнал бортового компьютера.]]
@@ -1391,17 +1418,38 @@ room {
 					pn ("Внимание! Стыковочный люк: открыт")
 				end
 				if _'alex'.state == 3 then
-					pn ("Внимание! Стыковочные замки: ошибка")
+					pn ("Внимание! Стыковочные замки: отказ")
 				end
 			end
 			p ("На панели ты видишь кнопку запуска программы.")
 		end;
+	};
+	obj {
+		-"место пилота,место|стойка|места/мн|стойки/мн";
+		nam = 'place';
+		title = 'в стойке';
+		inside_dsc = function() p [[Ты пристёгнут с стойке пилота.]]; end;
+		description = [[В кабине есть два места для пилотов. Космонавты весь полёт проводят стоя,
+		пристегнувшись ремнями к специальным стойкам.]];
+		before_LetIn = function(s)
+			p [[Ты пристёгиваешься к своей стойке.]]
+			place(me(), s)
+		end;
+		before_LetGo = function(s)
+			p [[Тебе мешают ремни.]]
+		end;
+	}:attr'supporter,scenery,static,enterable':with {
+		'belts';
 	};
 	Careful {
 		nam = '#button';
 		-"кнопка";
 		description = [[Красная кнопка запуска хорошо заметна на панели управления.]];
 		before_Push = function()
+			if not me():where()^'place' then
+				p [[Сначала нужно пристегнуться к своей стойке.]]
+				return
+			end
 			if _'alex'.state == 2 then
 				if _'#люк':has'open' then
 					p [[-- Внимание! Стыковочный люк открыт. Расстыковка невозможна! -- слышишь ты синтезированную речь бортового компьютера.]]
@@ -1482,7 +1530,7 @@ room {
 			if s.state == 1 then
 				p [[Александр возится у панели управления.]];
 			elseif s.state == 2 then
-				p [[Александр занял своё место у панели управления.]]
+				p [[Александр пристёгнут к стойке пилота.]]
 			elseif s.state == 3 then
 				p [[Александр изучает показания приборов на панели управления.]]
 			else
@@ -1559,7 +1607,7 @@ room {
 			Prop { -"узел" };
 			Careful {
 				nam = 'lock';
-				-"стыковочный замок|замок|корпус";
+				-"стыковочный замок|замок,механизм|корпус";
 				description = function(s)
 					p [[Судя по телеметрии, проблема именно в этом замке.]]
 					if s:hasnt'open' then
@@ -1569,6 +1617,8 @@ room {
 						return false
 					end
 				end;
+				before_LetGo = function(s, w) if w^'болтик' then _'болтик'.know = true end return false end;
+				before_Close = function() return false end;
 				['before_Open,Unlock,Attack'] = function(s, w)
 					if s:has'open' then
 						p [[Уже вскрыт.]]
@@ -1589,7 +1639,22 @@ room {
 					s:attr'open'
 					p [[Ты вскрываешь корпус 3-го замка дрелью-шуруповёртом.]]
 				end;
-			}:attr'container,openable':disable();
+			}:attr'container,openable':disable():with {
+				obj {
+					nam = 'болтик';
+					know = false;
+					-"болтик,болт";
+					init_dsc = [[В механизме привода замка застрял болтик.]];
+					description = function(s)
+						s.know = true;
+						if s:where() ^ 'lock' then
+							p [[Болтик застрял в механизме замка! Поэтому расстыковка не удалась!]]
+						else
+							p [[Небольшой болтик. Интересно, откуда он выпал?]]
+						end
+					end;
+				}
+			}
 		}
 	}
 }
@@ -1608,7 +1673,11 @@ Ephe {
 			return
 		end
 		if _'alex'.state == 3 then
-			p [[-- Беркут, ты выяснил в чём проблема?^-- 3-й стыковочный замок не отвечает и автоматика прекращает процесс расстыковки!]]
+			if _'болтик'.know then
+				p [[-- Беркут, это был болтик!^-- Интересно, откуда он выпал?^-- Хороший вопрос.]]
+			else
+				p [[-- Беркут, ты выяснил в чём проблема?^-- 3-й стыковочный замок не отвечает и автоматика прекращает процесс расстыковки!]]
+			end
 			_'lock':enable()
 			return
 		end
@@ -1638,9 +1707,14 @@ Ephe {
 			return
 		end
 		if _'alex'.state == 3 then
-			pn "-- Заря, я Ястреб. Расстыковка не состоялась."
-			pn "-- Ястреб, я Заря. Мы изучаем телеметрию. Нет данных по З-му стыковочному замку. Вероятно, проблема в нём. Попробуйте закоротить."
-			pn "-- Заря, Ястреб. Вас понял, приступаю."
+			if _'болтик'.know then
+				pn "-- Заря, я Ястреб. Я обнаружил болтик в 3-м замке."
+				pn "-- Ястреб, я Заря. Вас понял."
+			else
+				pn "-- Заря, я Ястреб. Расстыковка не состоялась."
+				pn "-- Ястреб, я Заря. Мы изучаем телеметрию. Нет данных по З-му стыковочному замку. Вероятно, проблема в нём. Может быть, замыкание датчика замка поможет."
+				pn "-- Заря, Ястреб. Вас понял, приступаю."
+			end
 			_'lock':enable()
 			return
 		end
