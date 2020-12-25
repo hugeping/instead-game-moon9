@@ -41,6 +41,28 @@ Verb {
 	"[по|]звон/ить",
 	":Ring"
 }
+VerbExtend {
+	"#Push",
+	"{noun}/вн вперёд|от себя : Push",
+	"{noun}/вн назад|на себя : Pull",
+	"{noun}/вн направо : PushRight",
+	"{noun}/вн налево : PushLeft",
+}
+VerbExtend {
+	"#Pull",
+	"{noun}/вн вперёд|от себя : Push",
+	"{noun}/вн назад|на себя : Pull",
+	"{noun}/вн направо : PushRight",
+	"{noun}/вн налево : PushLeft",
+}
+function mp:PushRight(w)
+	mp:xaction("Push", w)
+end
+
+function mp:PushLeft(w)
+	mp:xaction("Push", w)
+end
+
 function mp.token.ring()
 	return "{noun_obj}/телефон,вн|звонок|вызов"
 end
@@ -1041,6 +1063,8 @@ room {
 		on = true;
 		dsc = [[В стену встроен рычаг, блокирующий дверь в агрегатный отсек.]];
 		description = [[Рычаг покрашен в красный цвет, чтобы напоминать экипаж об опасности выхода в негерметичный агрегатный отсек.]];
+		before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
+
 		['before_Push,Pull'] = function(s)
 			if _'#дверь':has 'open' then
 				p [[Сначала нужно закрыть дверь.]]
@@ -1307,6 +1331,7 @@ room {
 		obj {
 			-"рычаг,красный рычаг";
 			description = [[С помощью рычага можно управлять выходной дверью.]];
+			before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
 			["before_Push,Pull"] = function(s)
 				if not gravity then
 					p [[В твоих планах на сегодня не было выхода в открытый космос.]]
@@ -1346,7 +1371,8 @@ room {
 	};
 	Prop { -"стена|стены/мн" };
 }
-
+global 'docking' (false)
+global 'turned' (false)
 room {
 	nam = 'moonmod';
 	title = 'лунный модуль';
@@ -1405,12 +1431,13 @@ room {
 		end;
 	};
 	Careful {
-		nam = '#panel';
+		nam = 'panel';
 		-"панель управления,панель,прибор*|компьютер";
 		prog = 1;
 		description = function(s)
 			local progs = {
 				"расстыковка";
+				"автопилот";
 			}
 			if s.prog then
 				pn ("Программа: ", progs[s.prog])
@@ -1421,8 +1448,66 @@ room {
 					pn ("Внимание! Стыковочные замки: отказ")
 				end
 			end
-			p ("На панели ты видишь кнопку запуска программы.")
+			p [[На панели ты видишь кнопку запуска программы и две ручки управления: левая и правая.]]
 		end;
+	}:with {
+		Careful { -"ручки", description = [[Эти ручки позволяют управлять двигателями модуля.]] };
+		Careful {
+			-"левая ручка,ручка,левая/но";
+			description = [[Это ручка управления тангажом и креном.]];
+			["before_Push,Pull"] = function(s)
+				if not docking then
+					p [[Сначала надо удалиться от Арго на безопасное расстояние.]]
+				else
+					p [[Уверенным движением ручки ты развернул модуль на 180 градусов.]]
+					turned = not turned
+					if not turned then
+						p [[Сейчас прямо по курсу находится Арго.]]
+					else
+						p [[Теперь Арго находится за кормой.]]
+					end
+				end
+			end;
+			["before_PushRight,PushLeft"] = function(s)
+				if not docking then
+					mp:xaction("Push", s);
+				else
+					p [[Ты не видишь смысла тратить топливо для вращения модуля.]]
+				end
+			end;
+		};
+		Careful {
+			-"правая ручка,ручка,правая/но";
+			description = [[Это ручка управления системой причаливания.]];
+			before_Push = function(s)
+				if not docking then
+					p [[Хочешь протаранить Арго?]]
+				else
+					docking = false
+					p [[Ты толкнул ручку от себя. Маневровые двигатели включились, дав импульс модулю на причаливание.]]
+				end
+			end;
+			before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
+			["before_PushRight,PushLeft"] = function(s)
+				if not docking then
+					mp:xaction("Push", s);
+				else
+					p [[Ты не видишь смысла тратить топливо для смещения корабля в сторону.]]
+				end
+			end;
+			["before_Pull"] = function(s,w)
+				if _'alex'.state < 3 then
+					p [[Что ты делаешь? Лунный модуль ещё не отстыковался!]]
+					return
+				end
+				if docking then
+					p [[Модуль уже удалился от Арго на достаточное расстояние.]]
+				else
+					docking = 1
+					p [[Ты потянул ручку на себя. Маневровые двигатели включились, дав импульс модулю на отчаливание.]];
+				end
+			end;
+		};
 	};
 	obj {
 		-"место пилота,место|стойка|места/мн|стойки/мн";
@@ -1446,15 +1531,19 @@ room {
 		-"кнопка";
 		description = [[Красная кнопка запуска хорошо заметна на панели управления.]];
 		before_Push = function()
+			if not _'panel'.prog then
+				p "Программа не выбрана."
+				return
+			end
 			if not me():where()^'place' then
 				p [[Сначала нужно пристегнуться к своей стойке.]]
 				return
 			end
+			if _'#люк':has'open' then
+				p [[-- Внимание! Стыковочный люк открыт. Расстыковка невозможна! -- слышишь ты синтезированную речь бортового компьютера.]]
+				return
+			end
 			if _'alex'.state == 2 then
-				if _'#люк':has'open' then
-					p [[-- Внимание! Стыковочный люк открыт. Расстыковка невозможна! -- слышишь ты синтезированную речь бортового компьютера.]]
-					return
-				end
 				if _'Беркут'.ack then
 					p [[Сначала нужно проверить радиосвязь.]]
 					return
@@ -1473,8 +1562,12 @@ room {
 				if _'болтик':inside'lock' then
 					p [[Ничего не происходит!]]
 				else
-					p [[TODO]]
+					_'alex'.state = 4
+					_'panel'.prog = false
+					p [[Лунный модуль вздрогивает. Замки сработали! Теперь нужно отлететь от Арго на безопасное расстояние и развернуться.]]
 				end
+			elseif _'alex'.state == 4 then
+				p [[TODO]]
 			elseif _'alex'.state == 1 then
 				p [[Рано начинать расстыковку.]]
 			else
@@ -1577,6 +1670,10 @@ room {
 			return false
 		end;
 		before_Open = function(s)
+			if _'alex'.state > 3 then
+				p [[Не стоит разгерметезировать лунный модуль.]]
+				return
+			end
 			if _'alex'.state == 3 then
 				_'locks':enable()
 			end
@@ -1686,6 +1783,14 @@ Ephe {
 			_'lock':enable()
 			return
 		end
+		if _'alex'.state == 4 then
+			if not _'panel'.prog then
+				p [[-- Беркут, активируй программу автопилота!^-- Есть, командир!]]
+				_'panel'.prog = 2
+			else
+				p [[-- Беркут, программа загружена?^-- Так точно!]]
+			end
+		end
 		if _'alex':visible() then
 			p [[-- Как настрой, Беркут?^-- Всё в порядке, командир!]]
 		else
@@ -1723,6 +1828,11 @@ Ephe {
 			_'lock':enable()
 			return
 		end
+		if _'alex'.state == 4 then
+			pn "-- Заря, это Ястреб. Расстыковка успешно осуществлена!"
+			pn "... Ястреб, Заря желает вам успешной посадки!"
+			return
+		end
 		p [[Сейчас нет необходимости связываться с Землёй.]]
 	end;
 }
@@ -1742,6 +1852,18 @@ Ephe {
 		end
 		if _'alex'.state == 3 then
 			pn "-- Арго, Ястреб. Расстыковка не состоялась. Работаем над решением проблемы. Возможна разгерметизация. Оставайся в командном модуле.^-- Ястреб, Арго. Вас понял. На связи."
+			return
+		end
+		if _'alex'.state == 4 then
+			pn "-- Арго, Ястреб. Расстыковка произошла!"
+			p "-- Ястреб, Арго."
+			if not docking then
+				pn "Вижу вас совсем рядом."
+			elseif turned then
+				pn "Вижу вас во всём великолепии! До встречи, командир!"
+			else
+				pn "Наблюдаю ваше удаление!"
+			end
 			return
 		end
 		p "Сейчас нет необходимости связываться с Сергеем."
