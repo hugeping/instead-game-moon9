@@ -1094,7 +1094,7 @@ room {
 				p [[Без скафандра ты умрёшь!]]
 				return
 			end
-			if here() ^ 'moonmod' and _'alex'.state >= 3 then
+			if (here() ^ 'moonmod' or here() ^'moontech') and _'alex'.state >= 3 then
 				p [[Не стоит сейчас снимать скафандр. Это опасно для жизни.]]
 				return
 			end
