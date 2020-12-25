@@ -1437,7 +1437,7 @@ room {
 		description = function(s)
 			local progs = {
 				"расстыковка";
-				"автопилот";
+				"нав. Пик Малаперта";
 			}
 			if s.prog then
 				pn ("Программа: ", progs[s.prog])
