@@ -35,6 +35,17 @@ VerbExtendWord {
 	"#Exit",
 	"вернуться"
 }
+Verb {
+	"сверл/ить,просверл/ить",
+	"{noun}/вн : Screw",
+}
+function game:before_Screw(w)
+	if not have'screw' then
+		p [[Но у тебя нет дрели!]]
+		return
+	end
+	mp:xaction("Attack", w, _'screw')
+end
 
 Verb {
 	"#Ring",
@@ -1302,7 +1313,7 @@ cutscene {
 }
 
 room {
-	-"отсек";
+	-"отсек,модуль,корабль";
 	nam = 'moontech';
 	title = "лунный модуль (технический отсек)";
 	u_to = 'moonmod';
@@ -1376,7 +1387,7 @@ global 'turned' (false)
 room {
 	nam = 'moonmod';
 	title = 'лунный модуль';
-	-"модуль|кабина";
+	-"модуль,корабль|кабина";
 	['before_Answer,Ring'] = function()
 		if _'скафандр':has'worn' then
 			if _'скафандр'.radio then
@@ -1790,11 +1801,12 @@ Ephe {
 		end
 		if _'alex'.state == 4 then
 			if not _'panel'.prog then
-				p [[-- Беркут, активируй программу автопилота!^-- Есть, командир!]]
+				p [[-- Беркут, активируй программу навигации!^-- Есть, командир!]]
 				_'panel'.prog = 2
 			else
 				p [[-- Беркут, программа загружена?^-- Так точно!]]
 			end
+			return
 		end
 		if _'alex':visible() then
 			p [[-- Как настрой, Беркут?^-- Всё в порядке, командир!]]
