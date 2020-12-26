@@ -30,6 +30,7 @@ VerbExtend {
 	"#Talk",
 	"по {noun}/дт : Ring",
 	"по {noun}/дт с {noun}/тв,scene : Ring",
+	"~ с {noun}/тв,scene по {noun}/дт : Ring reverse",
 	":Talk"
 }
 VerbExtendWord {
@@ -89,13 +90,15 @@ Verb {
 
 VerbExtend {
 	"#Attack",
-	"{noun}/вн {noun}/тв,held : Attack"
+	"{noun}/вн {noun}/тв,held : Attack",
+	"~ {noun}/тв,held {noun}/вн : Attack reverse",
 }
 
 Verb {
 	"разобрать,разбер/и",
 	"{noun}/вн : Attack",
 	"{noun}/вн {noun}/тв,held : Attack",
+	"~ {noun}/тв,held {noun}/вн : Attack reverse",
 }
 game:dict {
 	["шуруповёрт/мр,С,но"] = {
