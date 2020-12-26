@@ -7,6 +7,7 @@ fmt.dash = true
 fmt.quotes = true
 require 'parser/mp-ru'
 require 'snapshots'
+mp.cursor = fmt.img 'gfx/cursor.png'
 mp.msg.Enter.EXITBEFORE = function()
 	if me():where() ^'place' then
 		p [[Но ты пристёгнут ремнями!]]
@@ -356,6 +357,7 @@ obj {
 	Раздражение, затаённые обиды и ссоры. Ты задыхаешься от отсутствия любви, как и она. Что стало причиной разлада? Твоя работа? Её усталость? Можно ли вырваться из этой западни?]];
 	found_in = 'home';
 	talk2 = false;
+	before_Attack = [[Тебя захлёстывает волна болезненной агрессии, но ты не поддаёшься ей.]];
 	before_Talk = function(s)
 		if s.talk2 then
 			if isDaemon'телефон' then
