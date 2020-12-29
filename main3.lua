@@ -115,7 +115,6 @@ game:dict {
 	}
 }
 global 'last_talk' (false)
-
 function game:before_Ring(w)
 	if (not w or w^'телефон') and not have 'телефон' then
 		p [[У тебя нет с собой телефона.]]
@@ -1083,7 +1082,7 @@ room {
 		on = true;
 		dsc = [[В стену встроен рычаг, блокирующий дверь в агрегатный отсек.]];
 		description = [[Рычаг покрашен в красный цвет, чтобы напоминать экипаж об опасности выхода в негерметичный агрегатный отсек.]];
-		before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
+		before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
 
 		['before_Push,Pull'] = function(s)
 			if _'#дверь':has 'open' then
@@ -1353,7 +1352,7 @@ room {
 		obj {
 			-"рычаг,красный рычаг";
 			description = [[С помощью рычага можно управлять выходной дверью.]];
-			before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
+			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
 			["before_Push,Pull"] = function(s)
 				if not gravity then
 					p [[В твоих планах на сегодня не было выхода в открытый космос.]]
@@ -1417,8 +1416,10 @@ local dirs = {
 room {
 	nam = 'moonmod';
 	dir = 'w';
-	height = 512;
+	pos = 0;
+	height = 273;
 	speed = 0;
+	vspeed = -5;
 	curspeed = 0;
 	title = 'лунный модуль';
 	-"модуль,корабль|кабина";
@@ -1453,6 +1454,14 @@ room {
 		end
 		return false
 	end;
+	before_Wait = function(s)
+		local m = s
+		if m.pos >= 100 and m.vspeed < 0 and m.speed == 0 and m.height < 250 then
+			walkin 'stage4'
+			return
+		end
+		return false
+	end;
 	dsc = function(s)
 		if s:once 'first' then
 			p [[Ты и Александр, облачённые в скафандры, находитесь в кабине лунного модуля.]]
@@ -1466,22 +1475,28 @@ room {
 	Path { -"технический отсек", desc = "Ты можешь спуститься в технический отсек.", walk_to = 'moontech' };
 	Ephe { -"космос", description = [[Ты никогда не привыкнешь к этому зрелищу. Одновременно пугающему и прекрасному.]] };
 	Distance { nam = 'клубы'; -"туман,пар,вспышк*|клубы/мн";
-		description = [[Время от времени ты видишь в тумане яркие вспышки.]];
+		description = function()
+			if _'moonmod'.pos >= 100 then
+				p [[Тумана больше нет.]]
+				return
+			end
+			p [[Время от времени ты видишь в тумане яркие вспышки.]];
+		end;
 	}:disable();
 	Careful {
 		nam = '#win';
-		-"окна|окно";
+		-"окна,пейзаж*|окно";
 		dsc = function()
 			if gravity then
 				p [[Сквозь трапециевидные окна виден лунный пейзаж.]]
 				if _'alex'.state == 5 then
 					local m = _'moonmod'
-					if m.dir == 'w' then
+					if m.dir ~= 'e' or m.pos < 50 then
 						p [[Ты видишь клубы розового тумана, скрывающего лунную поверхность!]]
-					elseif m.dir == 'n' then
-						p [[На западе ты видишь клубы розового тумана, скрывающего лунную поверхность! ]]
-					elseif m.dir == 's' then
-						p [[На востоке ты видишь клубы розового тумана, скрывающего лунную поверхность!]]
+					else
+						if m.pos > 50 and m.pos < 100 then
+							p [[Ты видишь как туман постепенно рассеивается.]]
+						end
 					end
 				end
 			else
@@ -1490,6 +1505,7 @@ room {
 		end;
 		description = function(s)
 			p [[Окна лунного модуля достаточно большие и обеспечивают неплохой обзор.]]
+			s:dsc()
 		end;
 	};
 	Careful {
@@ -1498,11 +1514,35 @@ room {
 		prog = 1;
 		daemon = function(s)
 			local m = _'moonmod'
-			m.height = m.height - (rnd(3) + 7)
+			m.height = m.height + (rnd(3) + m.vspeed)
 			if m.height < 120 then
+				if m.pos < 100 then
+					p [[Садиться в таких условиях видимости -- безумие!]]
+				elseif m.speed ~= 0 then
+					p [[Для посадки нужно погасить горизонтальную скорость.]]
+				else
+					walkin 'stage4'
+					return
+				end
+				p [[Ты сдвинул левую ручку вперёд и снова набрал высоту.]]
+				m.vspeed = 0
 				m.height = 120 + rnd(7)
 			end
-			m.curspeed = m.curspeed + m.speed
+			if m.height > 512 then
+				m.height = 512
+			end
+			m.curspeed = m.curspeed + m.speed*(rnd(5) + 2)
+			if m.speed == 0 and m.curspeed > 0 then m.curspeed = 0 end
+			if m.speed == 0 and m.curspeed < 0 then m.curspeed = 0 end
+			if m.curspeed > 30 then m.curspeed = 30 + rnd(6) end
+			if m.curspeed < -30 then m.curspeed = -30 + rnd(6) end
+			if m.dir == 'e' then
+				m.pos = m.pos + m.curspeed
+			elseif m.dir == 'w' then
+				m.pos = m.pos - m.curspeed
+			end
+			if m.pos < -100 then m.pos = -100 end
+			if m.pos > 150 then m.pos = 150 end
 		end;
 		description = function(s)
 			local progs = {
@@ -1512,6 +1552,8 @@ room {
 			if gravity then
 				pn ("Ориентация: ", dirs[_'moonmod'.dir])
 				pn ("Высота: ", _'moonmod'.height, " м.")
+				pn ("Горизонт. скорость ", _'moonmod'.curspeed, " м/с.")
+				pn ("Вертик. скорость ", _'moonmod'.vspeed, " м/с.")
 			end
 			if s.prog then
 				pn ("Программа: ", progs[s.prog])
@@ -1614,6 +1656,18 @@ room {
 			description = [[Это ручка управления двигателями.]];
 			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
 			before_Push = function(s)
+				if gravity then
+					if _'panel'.prog then
+						p [[Сначала нужно перевести модуль в режим ручного управления.]]
+						return
+					end
+					local m = _'moonmod'
+
+					m.vspeed = m.vspeed + rnd(3)
+					if m.vspeed > 7 then m.vspeed = 7 end
+					p [[Плавным движением ручки ты изменил вертикальную скорость.]]
+					return
+				end
 				if not docking then
 					p [[Хочешь протаранить Арго?]]
 				else
@@ -1628,8 +1682,16 @@ room {
 					end
 				end
 			end;
-			before_Transfer = function(s, w) if w == me() then mp:xaction("Pull", s) else return false end end;
+			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
 			["before_PushRight,PushLeft"] = function(s)
+				if gravity then
+					if _'panel'.prog then
+						p [[Сначала нужно перевести модуль в режим ручного управления.]]
+						return
+					end
+					p [[Плавным движением ручки ты сдвинул лунный модуль в сторону.]]
+					return
+				end
 				if not docking then
 					mp:xaction("Push", s);
 				else
@@ -1637,6 +1699,17 @@ room {
 				end
 			end;
 			["before_Pull"] = function(s,w)
+				if gravity then
+					if _'panel'.prog then
+						p [[Сначала нужно перевести модуль в режим ручного управления.]]
+						return
+					end
+					local m = _'moonmod'
+					m.vspeed = m.vspeed - rnd(3)
+					if m.vspeed < -7 then m.vspeed = -7 end
+					p [[Плавным движением ручки ты изменил вертикальную скорость.]]
+					return
+				end
 				if _'alex'.state < 3 then
 					p [[Что ты делаешь? Расстыковка ещё не произведена!]]
 					return
@@ -1740,7 +1813,12 @@ room {
 		radio = -1;
 		daemon = function(s)
 			if gravity then
-				pn ("-- Высота: ", _'moonmod'.height,".", " Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
+				p ("-- Высота: ", _'moonmod'.height,".")
+				p (" Вертикальная скорость: ", _'moonmod'.vspeed, ".")
+				if _'moonmod'.curspeed ~= 0 then
+					p (" Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
+				end
+				pn()
 				return
 			end
 			local radio = {
@@ -1955,7 +2033,11 @@ Ephe {
 			return
 		end
 		if _'alex'.state == 5 then
-			p [[-- Беркут, ты видишь это?^-- Да, командир.]]
+			if _'moonmod'.pos >= 100 then
+				p [[-- Беркут, кажется, вышли!^-- Да, командир, можно садиться!]];
+			else
+				p [[-- Беркут, ты видишь это?^-- Да, командир.]]
+			end
 			return
 		end
 		if _'alex':visible() then
@@ -2001,6 +2083,11 @@ Ephe {
 			return
 		end
 		if _'alex'.state == 5 then
+			if _'moonmod'.pos >= 100 then
+				pn "-- Заря, я Ястреб! Вышли из зоны явления. Садимся!"
+				pm "... -- Ястреб, Заря желает вам успешного прилунения!"
+				return
+			end
 			pn "-- Заря, я Ястреб. Что за преходящие лунные явления?"
 			pn "... Ястреб, Заря. Вы должны уже видеть это. Мы наблюдаем розовые вспышки закрывающие пик, диаметром до 2-х километров."
 			pn "-- Заря, я Ястреб. Вы понимаете что это такое?"
@@ -2044,7 +2131,14 @@ Ephe {
 		p "Сейчас нет необходимости связываться с Сергеем."
 	end;
 }
-
+cutscene {
+	nam = 'stage4';
+	enter = function(s)
+		DaemonStop 'alex'
+	end;
+	title = "TODO";
+	text = "TODO";
+}
 cutscene {
 	nam = 'stage3';
 	title = 'Луна-9';
