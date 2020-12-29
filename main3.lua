@@ -56,17 +56,21 @@ Verb {
 }
 VerbExtend {
 	"#Push",
-	"{noun}/вн вперёд|от себя : Push",
-	"{noun}/вн назад|на себя : Pull",
-	"{noun}/вн направо : PushRight",
-	"{noun}/вн налево : PushLeft",
+	"{noun}/вн вперёд : Push",
+	"{noun}/вн от себя : Push",
+	"{noun}/вн назад : Pull",
+	"{noun}/вн на себя : Pull",
+	"{noun}/вн направо|вправо : PushRight",
+	"{noun}/вн налево|влево : PushLeft",
 }
 VerbExtend {
 	"#Pull",
-	"{noun}/вн вперёд|от себя : Push",
-	"{noun}/вн назад|на себя : Pull",
-	"{noun}/вн направо : PushRight",
-	"{noun}/вн налево : PushLeft",
+	"{noun}/вн вперёд: Push",
+	"{noun}/вн от себя : Push",
+	"{noun}/вн назад : Pull",
+	"{noun}/вн на себя : Pull",
+	"{noun}/вн направо|вправо : PushRight",
+	"{noun}/вн налево|влево : PushLeft",
 }
 function mp:PushRight(w)
 	mp:xaction("Push", w)
@@ -1402,9 +1406,18 @@ room {
 global 'docking' (false)
 global 'turned' (false)
 global 'faraway' (false)
+
+local dirs = {
+	n = 'север',
+	s = 'юг',
+	e = 'восток',
+	w = 'запад'
+}
+
 room {
 	nam = 'moonmod';
 	dir = 'w';
+	height = 512;
 	title = 'лунный модуль';
 	-"модуль,корабль|кабина";
 	['before_Answer,Ring'] = function()
@@ -1452,7 +1465,7 @@ room {
 	Ephe { -"космос", description = [[Ты никогда не привыкнешь к этому зрелищу. Одновременно пугающему и прекрасному.]] };
 	Distance { nam = 'клубы'; -"туман,пар,вспышк*|клубы/мн";
 		description = [[Время от времени ты видишь в тумане яркие вспышки.]];
-	};
+	}:disable();
 	Careful {
 		nam = '#win';
 		-"окна|окно";
@@ -1481,21 +1494,21 @@ room {
 		nam = 'panel';
 		-"панель управления,панель,прибор*|компьютер";
 		prog = 1;
-		height = 900;
+		daemon = function(s)
+			local m = _'moonmod'
+			m.height = m.height - (rnd(3) + 7)
+			if m.height < 120 then
+				m.height = 120 + rnd(7)
+			end
+		end;
 		description = function(s)
 			local progs = {
 				"расстыковка";
 				"нав. Пик Малаперта";
 			}
 			if gravity then
-				local dirs = {
-					n = 'север';
-					s = 'юг';
-					e = 'восток';
-					w = 'запад';
-				}
 				pn ("Ориентация: ", dirs[_'moonmod'.dir])
-				pn ("Высота: ", s.height, " м.")
+				pn ("Высота: ", _'moonmod'.height, " м.")
 			end
 			if s.prog then
 				pn ("Программа: ", progs[s.prog])
@@ -1506,14 +1519,22 @@ room {
 					pn ("Внимание! Стыковочные замки: отказ")
 				end
 			end
-			p [[На панели ты видишь кнопку запуска программы и две ручки управления: левая и правая.]]
+			p [[На панели ты видишь кнопку запуска и отмены программы и две ручки управления: левая и правая.]]
 		end;
 	}:with {
-		Careful { -"ручки", description = [[Эти ручки позволяют управлять двигателями модуля.]] };
+		Careful { -"ручки", description = [[Эти ручки позволяют управлять двигателями модуля. Ты можешь двигать их: влево, вправо, вперёд и назад.]] };
 		Careful {
-			-"левая ручка,ручка,левая/но";
+			-"правая ручка,ручка,правая/но";
 			description = [[Это ручка управления тангажом и креном.]];
 			["before_Push,Pull"] = function(s)
+				if gravity then
+					if _'panel'.prog then
+						p [[Сначала нужно перевести модуль в режим ручного управления.]]
+						return
+					end
+					p [[TODO]]
+					return
+				end
 				if not docking then
 					p [[Сначала надо удалиться от Арго на безопасное расстояние.]]
 				else
@@ -1527,6 +1548,26 @@ room {
 				end
 			end;
 			["before_PushRight,PushLeft"] = function(s)
+				if gravity then
+					if _'panel'.prog then
+						p [[Сначала нужно перевести модуль в режим ручного управления.]]
+						return
+					end
+					local dirs = { 'w', 'n', 'e', 's' }
+					local d = _'moonmod'.dir
+					local ns = { w = 1, n = 2, e = 3, s = 4 }
+					d = ns[d]
+					if mp.event == 'PushRight' then
+						d = d + 1
+					else
+						d = d - 1
+					end
+					if d <= 0 then d = 4 elseif d > 4 then d = 1 end
+					_'moonmod'.dir = dirs[d]
+					local names = { 'запад', 'север', 'восток', 'юг' }
+					p ([[Плавным движением ручки ты развернул модуль на ]]..names[d]..".")
+					return
+				end
 				if not docking then
 					mp:xaction("Push", s);
 				else
@@ -1535,7 +1576,7 @@ room {
 			end;
 		};
 		Careful {
-			-"правая ручка,ручка,правая/но";
+			-"левая ручка,ручка,левая/но";
 			description = [[Это ручка управления двигателями.]];
 			before_Push = function(s)
 				if not docking then
@@ -1621,6 +1662,7 @@ room {
 				_'Заря'.ack = false
 				stage = 'locking'
 				_'alex'.state = 3
+				DaemonStop 'alex'
 				p [[Ты нажимаешь кнопку.^-- Поехали!^Послышался тревожный сигнал компьютера. Снова неполадки?]]
 			elseif _'alex'.state == 3 then
 				p [[Ты нажимаешь кнопку.]]
@@ -1642,6 +1684,12 @@ room {
 				end
 				walkin 'stage3'
 				return
+			elseif _'alex'.state == 5 and _'panel'.prog then
+				_'panel'.prog = false
+				pn [[Ты включаешь режим ручного управления модулем.]]
+				pn [[-- Командир, ручной режим. Начинаю мониторинг приборов! -- слышишь ты по радио голос Александра.]];
+				DaemonStart 'alex'
+				return
 			elseif _'alex'.state == 1 then
 				p [[Рано начинать расстыковку.]]
 			else
@@ -1656,6 +1704,10 @@ room {
 		state = 1;
 		radio = -1;
 		daemon = function(s)
+			if gravity then
+				pn ("-- Высота: ", _'moonmod'.height,".", " Направление: ", dirs[_'moonmod'.dir], ".")
+				return
+			end
 			local radio = {
 				"-- Проверка радиосвязи! -- голос Александра прозвучал непривычно близко. -- Арго, я Беркут. Как слышно?",
 				"-- Беркут, я Аргро. Связь отличная. -- это отозвался Сергей из командного модуля. -- Проверяем связь с ЦУП. -- Заря, это Арго. Как связь?";
@@ -1976,6 +2028,7 @@ cutscene {
 		gravity = true;
 		_'alex'.state = 5
 		enable 'клубы'
+		DaemonStart 'panel'
 	end;
 }
 -- эпизод 1
