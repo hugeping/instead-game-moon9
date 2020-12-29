@@ -1418,6 +1418,7 @@ room {
 	nam = 'moonmod';
 	dir = 'w';
 	height = 512;
+	speed = 0;
 	title = 'лунный модуль';
 	-"модуль,корабль|кабина";
 	['before_Answer,Ring'] = function()
@@ -1526,13 +1527,44 @@ room {
 		Careful {
 			-"правая ручка,ручка,правая/но";
 			description = [[Это ручка управления тангажом и креном.]];
+			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
 			["before_Push,Pull"] = function(s)
 				if gravity then
 					if _'panel'.prog then
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
 					end
-					p [[TODO]]
+
+					local m = _'moonmod'
+					local d
+					if mp.event == 'Push' then
+						d = 1
+						m.speed = m.speed + 1
+						if m.speed > 2 then
+							m.speed = 2
+						end
+					else
+						d = -1
+						m.speed = m.speed - 1
+						if m.speed < 2 then
+							m.speed = -2
+						end
+					end
+					if m.speed == 0 then
+						p [[Плавным движением ручки ты выровнял модуль.]]
+					elseif d > 0 then
+						if m.speed < 0 then
+							p [[Плавным движением ручки ты уменьшил крен лунного модулья.]]
+						else
+							p [[Плавным движением ручки ты накренил лунный модуль вперёд.]];
+						end
+					else
+						if m.speed > 0 then
+							p [[Плавным движением ручки ты уменьшил крен лунного модуля.]]
+						else
+							p [[Плавным движением ручки ты накренил лунный модуль назад.]]
+						end
+					end
 					return
 				end
 				if not docking then
@@ -1578,6 +1610,7 @@ room {
 		Careful {
 			-"левая ручка,ручка,левая/но";
 			description = [[Это ручка управления двигателями.]];
+			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
 			before_Push = function(s)
 				if not docking then
 					p [[Хочешь протаранить Арго?]]
@@ -1705,7 +1738,7 @@ room {
 		radio = -1;
 		daemon = function(s)
 			if gravity then
-				pn ("-- Высота: ", _'moonmod'.height,".", " Направление: ", dirs[_'moonmod'.dir], ".")
+				pn ("-- Высота: ", _'moonmod'.height,".", " Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.speed)
 				return
 			end
 			local radio = {
