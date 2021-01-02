@@ -278,6 +278,15 @@ Prop = Class {
 	end;
 }:attr 'scenery'
 
+Useless= Class {
+	before_Default = function(s, ev)
+		if ev == "Exam" or ev == "Look" or ev == "Search" then
+			return false
+		end
+		p ("Лучше оставить ", s:noun 'вн', " в покое.")
+	end;
+}:attr 'scenery'
+
 function init()
 	walk 'home'
 end
@@ -1440,15 +1449,24 @@ room {
 	in_to = 'moontech';
 	enter = function(s)
 		if s:once() then
-			p [[Ты осторожно выходишь за пределы модуля. Перед тобой разворачивается чужой и мёртвый мир.]]
+			p [[Ты осторожно спускаешься по лестнице и осматриваешься. Перед тобой разворачивается чужой и мёртвый мир.]]
 		end
 	end;
 	dsc = [[Ты стоишь у лунного модуля. Вокруг простирается безжизненный лунный пейзаж.]];
 }:with {
+	Careful { -"опоры/мн|опора", description = "Опоры погружены в лунную пыль." };
+	Useless { -"пыль", description = [[Она здесь повсюду.]]; };
 	door {
 		-"модуль,корабль";
-		description = [[Необычно видеть модуль снаружи. В модуле есть дверь.]];
+		description = [[Необычно видеть модуль снаружи. Небольшая лестница ведёт к входной двери.]];
 		before_Enter = function(s)
+			mp:xaction("Enter", _'door1')
+		end;
+	}:attr'scenery,enterable,static';
+	door {
+		-"лестница";
+		description = [[Модуль стоит на четырёх опорах и добраться до входной двери можно только по алюминиевой лестнице.]];
+		["before_Enter,Climb"] = function(s)
 			mp:xaction("Enter", _'door1')
 		end;
 	}:attr'scenery,enterable,static';
