@@ -145,6 +145,7 @@ global 'gravity' ('earh')
 function game:before_Any(ev, w)
 	if ev == 'Jump' or ev == 'JumpOver' then
 		if gravity then
+			p [[Ты делаешь несколько неуверенных прыжков.]]
 			return
 		end
 		p [[В невесомости?]]
@@ -1149,10 +1150,20 @@ room {
 		end;
 	}:attr'clothing':with {
 		Careful { -"радио"; nam = 'радио';
+			req = false;
 			description = "Радио встроено в скафандр.";
 				before_Ring = function(s, w)
 				mp:xaction("Talk", w)
-			end }:disable();
+			end;
+			daemon = function(s)
+				if disabled(s) then return end
+				if time() % 3 == 2 then
+					if _'Заря'.req then
+						pn(_'Заря'.req)
+					end
+				end
+			end;
+			}:disable();
 	};
 
 	Careful {
@@ -1319,58 +1330,77 @@ cutscene {
 		_'скафандр':attr'worn'
 	end;
 }
+door {
+	-"дверь";
+	nam = 'door1';
+	["before_Open,Close"] = [[Дверь управляется с помощью рычага.]];
+	description = function(s)
+		if here() ^ 'moon1' then
+			p [[Эта прямоугольная массивная дверь ведёт внутрь модуля. Возле двери установлен красный рычаг.]]
+			return false
+		end
+		p [[Эта прямоугольная массивная дверь ведёт наружу.]]
+		if s:hasnt'open' then
+			p [[В лунном модуле нет шлюза, поэтому открытие двери означает разгерметизацию.]]
+		else
+			p [[В дверном проёме ты видишь Луну.]]
+		end
+		p [[Возле двери установлен красный рычаг.]];
+		return false
+	end;
+	door_to = function(s)
+		if here() ^ 'moon1' then
+			return 'moontech'
+		else
+			return 'moon1'
+		end
+	end
+}:attr 'static,openable,scenery':with {
+	obj {
+		-"рычаг,красный рычаг";
+		description = [[С помощью рычага можно управлять выходной дверью.]];
+		before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
+		["before_Push,Pull"] = function(s)
+			if not gravity then
+				p [[В твоих планах на сегодня не было выхода в открытый космос.]]
+				return
+			elseif _'alex'.state == 5 then
+				p [[Не стоит открывать дверь, пока модуль не сел на поверхность.]]
+				return
+			end
+			if _'door1':hasnt 'open' then
+				_'door1':attr 'open'
+				p [[Ты открываешь дверь.]]
+				if s:once 'alex' then
+					p [[^В этот момент в технический отсек из кабины спустился Александр.]]
+					move('alex', here())
+				end
+				return
+			else
+				_'door1':attr '~open'
+				p [[Ты закрываешь дверь.]]
+				return
+			end
+			return false
+		end;
+	}:attr 'static';
+};
 
 room {
 	-"отсек,модуль,корабль";
 	nam = 'moontech';
 	title = "лунный модуль (технический отсек)";
 	u_to = 'moonmod';
+	out_to = 'door1';
 	dsc = [[В техническом отсеке работает только дежурное освещение. В стене расположена выходная дверь. Путь наверх ведёт в кабину.]];
 }:with {
 	Ephe { -"свет|освещение", description = "Неяркий свет синего спектра." };
+	Ephe { -"Луна", description = "Луна там, снаружи модуля."; };
+	'door1',
 	Path {
 		-"кабина",
 		desc = "Ты можешь подняться в кабину.";
 		walk_to = 'moontech';
-	};
-	out_to = '#gate';
-	door {
-		-"дверь";
-		nam = '#door';
-		["before_Open,Close"] = [[Дверь управляется с помощью рычага.]];
-		description = function(s)
-			p [[Эта прямоугольная массивная дверь ведёт наружу.]]
-			if s:hasnt'open' then
-				p [[В лунном модуле нет шлюза, поэтому открытие двери означает разгерметизацию.]]
-			else
-				p [[В дверном проёме ты видишь пепельный свет лунной поверхности.]]
-			end
-			p [[Возле двери установлен красный рычаг.]];
-			return false
-		end;
-	}:attr 'static,openable,scenery':with {
-		obj {
-			-"рычаг,красный рычаг";
-			description = [[С помощью рычага можно управлять выходной дверью.]];
-			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
-			["before_Push,Pull"] = function(s)
-				if not gravity then
-					p [[В твоих планах на сегодня не было выхода в открытый космос.]]
-					return
-				elseif _'alex'.state == 5 then
-					p [[Не стоит открывать дверь, пока модуль не сел на поверхность.]]
-					return
-				end
-				if _'#door':hasnt 'open' then
-					_'#door':attr 'open'
-					p [[Ты открываешь дверь.]]
-				else
-					_'#door':attr '~open'
-					p [[Ты закрываешь дверь.]]
-				end
-				return false
-			end;
-		}:attr 'static';
 	};
 	Careful {
 		-"луноход";
@@ -1401,6 +1431,28 @@ room {
 		description = [[Многофункциональная ручная дрель-шуруповёрт. Выполнена в форме пистолета.]];
 	};
 	Prop { -"стена|стены/мн" };
+}
+
+room {
+	-"Луна,пейзаж*";
+	nam = 'moon1';
+	title = 'У лунного модуля';
+	in_to = 'moontech';
+	enter = function(s)
+		if s:once() then
+			p [[Ты осторожно выходишь за пределы модуля. Перед тобой разворачивается чужой и мёртвый мир.]]
+		end
+	end;
+	dsc = [[Ты стоишь у лунного модуля. Вокруг простирается безжизненный лунный пейзаж. Ты можешь войти внутрь.]];
+}:with {
+	door {
+		-"модуль,корабль";
+		description = [[Необычно видеть модуль снаружи. В модуле есть дверь.]];
+		before_Enter = function(s)
+			mp:xaction("Enter", _'door1')
+		end;
+	}:attr'scenery,enterable';
+	'door1';
 }
 global 'docking' (false)
 global 'turned' (false)
@@ -1514,6 +1566,9 @@ room {
 		prog = 1;
 		daemon = function(s)
 			local m = _'moonmod'
+			if here() ~= m then
+				return
+			end
 			m.height = m.height + (rnd(3) + m.vspeed)
 			if m.height < 120 then
 				if m.pos < 100 then
@@ -1812,13 +1867,19 @@ room {
 		state = 1;
 		radio = -1;
 		daemon = function(s)
-			if gravity then
+			if gravity and _'moonmod'.height > 0 then
+				if not here() ^ 'moonmod' then
+					return
+				end
 				p ("-- Высота: ", _'moonmod'.height,".")
 				p (" Вертикальная скорость: ", _'moonmod'.vspeed, ".")
 				if _'moonmod'.curspeed ~= 0 then
 					p (" Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
 				end
 				pn()
+				return
+			end
+			if gravity and _'moonmod'.height == 0 then
 				return
 			end
 			local radio = {
@@ -2050,6 +2111,7 @@ Ephe {
 Ephe {
 	-"Заря";
 	ack = false;
+	req = false;
 	nam = 'Заря';
 	before_Talk = function(s)
 		if _'alex'.radio then
@@ -2063,6 +2125,7 @@ Ephe {
 				p "-- Заря, Ястреб на связи.^-- ... Ястреб, Заря. Принято."
 			end
 			s.ack = false
+			s.req = false
 			return
 		end
 		if _'alex'.state == 3 then
@@ -2163,6 +2226,8 @@ cutscene {
 		disable 'клубы'
 		_'moonmod'.height = 0
 		_'moonmod'.vspeed = 0
+		DaemonStart 'радио'
+		_'Заря'.req = [[-- ... Ястреб, Заря! Ответьте!]];
 		_'Заря'.ack =[[-- Заря. Ястреб. Мы сели!^
 				... -- Ястреб. Заря. Спасибо за отличную новость! Мы проверили телеметрию, всё в порядке!]]
 	end;
@@ -2215,4 +2280,18 @@ cutscene {
 -- Собираемая конструкция - в тени кратера.
 
 -- Эпизод 3
--- По радиомаякам идут пешком или едут к Луне-9
+-- идеи: лунная принцесса создана на основе плаката
+-- передатчик строится на основе радиотелескопа
+-- взорвать его можно водород + кислород на луноходе + выстрел из пистолета (нашёлся рядом с китайцем)
+-- перед взрывом китаец пытается помешать,
+-- никаких физических объектов, доказывающих наличие "чужой расы снов" кроме того, что строят сами космонавты нет!
+-- во сне гг видит сон Ларисы в котором он видит то, каким является на самом деле и это его "будит" и рвёт зависимость от лунной принцесы
+-- состояние сна-коматоза -- странный розовый газ.
+--
+-- По радиомаякам идут пешком или едут к Луне-9, пеленгатор КВ диапазона
+-- наблюдают газ, выходящий из расщелин. Розоватого цвета, вспышки... Приём затруднён.
+-- доходят до базы, через шлюз, кашляют. включают вентилятор - газ уходит.
+-- на базе пусто, аккумуляторы почти сели. Ли Ян - в "коматозном состоянии"
+-- в это время преходящее явление заканчивается
+-- на станции разобрана техника: радио итд.
+-- рядом со станцией нет лунохода. На своём луноходе едут к пику, там находят обломки лунохода
