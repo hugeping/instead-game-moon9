@@ -1359,6 +1359,10 @@ door {
 	end;
 	door_to = function(s)
 		if here() ^ 'moon1' then
+			if _'buggy'.indoor then
+				p [[Тебе мешает пройти луноход.]]
+				return
+			end
 			return 'moontech'
 		else
 			return 'moon1'
@@ -1377,13 +1381,13 @@ door {
 				p [[Не стоит открывать дверь, пока модуль не сел на поверхность.]]
 				return
 			end
+			if here() ^ 'moon1' and (_'buggy'.indoor or _'buggy':inroom 'moontech') then
+				p [[Сейчас Александр готовит луноход к выгрузке. Не стоит ему мешать.]]
+				return
+			end
 			if _'door1':hasnt 'open' then
 				_'door1':attr 'open'
 				p [[Ты открываешь дверь.]]
-				if s:once 'alex' then
-					p [[^В этот момент в технический отсек из кабины спустился Александр.]]
-					move('alex', here())
-				end
 				return
 			else
 				_'door1':attr '~open'
@@ -1412,8 +1416,35 @@ room {
 		walk_to = 'moontech';
 	};
 	Careful {
+		nam = 'buggy';
 		-"луноход";
-		description = [[Сейчас луноход находится в сложенном состоянии.]];
+		assembled = false;
+		indoor = false;
+		['before_Pull,Push,Take'] = function(s)
+			if not s.indoor then
+				return false
+			end
+			p [[Ты поддерживаешь сложенный луноход. На Луне он весит не больше 30 килограмм. Александр осторожно стравливает тросы и постепенно луноход опускается на лунную поверхность.]]
+			s.indoor = false
+		end;
+		description = function(s)
+			if not s.assembled then
+				if s.indoor then
+					p [[Александр спускает сложенный луноход на тросах. Тебе нужно помочь ему.]]
+				else
+					p [[Сейчас луноход находится в сложенном состоянии.]]
+				end
+			else
+				p [[Луноход готов к работе!]]
+			end
+		end;
+		dsc = function(s)
+			if s.indoor then
+				p [[Ты видишь в проёме двери сложенный луноход.]]
+				return
+			end
+			return false
+		end;
 		before_Enter = function(s)
 			if here() ^ 'moontech' then
 				p [[Кататься в луноходе ты будешь на Луне.]]
@@ -1890,6 +1921,7 @@ room {
 		nam = 'alex';
 		state = 1;
 		radio = -1;
+		mwalk = 0;
 		daemon = function(s)
 			if gravity and _'moonmod'.height > 0 then
 				if not here() ^ 'moonmod' then
@@ -1904,6 +1936,19 @@ room {
 				return
 			end
 			if gravity and _'moonmod'.height == 0 then
+				if here() ^'moontech' and _'door1':has'open' and s:once 'moontech' then
+					p [[В этот момент в технический отсек из кабины спустился Александр.]]
+					move('alex', 'moontech')
+				elseif _'buggy':inroom() ^ 'moontech' and s:inroom() ^ 'moontech' then
+					s.mwalk = s.mwalk + 1
+					if _'door1':has'open' and here()^'moon1' and s.mwalk > 3 then
+						move('buggy', 'moon1')
+						_'buggy'.indoor = true
+						p [[Ты видишь как в проёме двери показался сложенный луноход. Это Александр, закрепив его тросами перекинутыми через блоки в потолке технического отсека, начал его выгрузку.^-- Командир! Принимай груз!]]
+					end
+				elseif _'buggy':inroom() ^ 'moon1' and not _'buggy'.indoor and s:inroom() ^ 'moontech' and s:once 'moon1' then
+					p [[Александр слезает по лестнице и становится рядом с луноходом.]]
+				end
 				return
 			end
 			local radio = {
@@ -1961,7 +2006,11 @@ room {
 			end
 		end;
 		description = function(s)
-			p [[В скафандрах все космонавты похожи друг на друга.]]
+			if s:inroom 'moontech' and _'buggy':inroom'moontech' then
+				p [[Александр готовит луноход к выгрузке.]]
+			else
+				p [[В скафандрах все космонавты похожи друг на друга.]]
+			end
 		end;
 	}:attr'animate';
 	obj {
@@ -2125,6 +2174,10 @@ Ephe {
 			end
 			return
 		end
+		if _'buggy'.indoor then
+			p [[-- Тебе нужна помощь?^-- Да, лучше перестраховаться, командир.]]
+			return
+		end
 		if _'alex':visible() then
 			p [[-- Как настрой, Беркут?^-- Всё в порядке, командир!]]
 		else
@@ -2254,6 +2307,7 @@ cutscene {
 		_'Заря'.req = [[-- ... Ястреб, Заря! Ответьте!]];
 		_'Заря'.ack =[[-- Заря. Ястреб. Мы сели!^
 				... -- Ястреб. Заря. Спасибо за отличную новость! Мы проверили телеметрию, всё в порядке!]]
+		DaemonStart 'alex'
 	end;
 }
 cutscene {
