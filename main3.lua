@@ -1426,6 +1426,7 @@ room {
 			end
 			p [[Ты поддерживаешь сложенный луноход. На Луне он весит не больше 30 килограмм. Александр осторожно стравливает тросы и постепенно луноход опускается на лунную поверхность.]]
 			s.indoor = false
+			disable 'тросы'
 		end;
 		description = function(s)
 			if not s.assembled then
@@ -1452,7 +1453,9 @@ room {
 			end
 			return false
 		end;
-	}:attr 'container,transparent,enterable,~scenery';
+	}:attr 'container,transparent,enterable,~scenery':with {
+		Useless { nam = 'тросы', -"тросы/мн|трос", description = [[Тонкие, но достаточно крепкие.]] }:disable();
+	};
 	Careful {
 		-"оборудование";
 		description = function(s)
@@ -1944,6 +1947,7 @@ room {
 					if _'door1':has'open' and here()^'moon1' and s.mwalk > 3 then
 						move('buggy', 'moon1')
 						_'buggy'.indoor = true
+						enable 'тросы'
 						p [[Ты видишь как в проёме двери показался сложенный луноход. Это Александр, закрепив его тросами перекинутыми через блоки в потолке технического отсека, начал его выгрузку.^-- Командир! Принимай груз!]]
 					end
 				elseif _'buggy':inroom() ^ 'moon1' and not _'buggy'.indoor and s:inroom() ^ 'moontech' and s:once 'moon1' then
