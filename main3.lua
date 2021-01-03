@@ -1431,9 +1431,9 @@ room {
 		-"луноход";
 		assembled = false;
 		indoor = false;
-		before_Transfer = function(s, w) if w == me() then mp:xaction('Take', s) else return false end end;
-		['before_Pull,Push,Take'] = function(s)
-			if not s.indoor and not s.assembled and (mp.event == 'Pull' or mp.event == 'Take') then
+		['before_Pull,Push,Take,Transfer'] = function(s, w)
+			if not s.indoor and not s.assembled and
+					(mp.event == 'Pull' or mp.event == 'Take' or w == me()) then
 				s.assembled = true
 				p [[Ты крепко хватаешься за луноход и вместе с Александром вам удаётся разложить раму.
 				Через несколько минут луноход полностью разложен! Осталось только закрутить крепёжные болты.]]
