@@ -37,6 +37,7 @@ VerbExtendWord {
 	"#Exit",
 	"вернуться"
 }
+
 Verb {
 	"сверл/ить,просверл/ить",
 	"{noun}/вн : Screw",
@@ -161,6 +162,10 @@ function game:before_Any(ev, w)
 			end
 			if w ^ 'Беркут' or w ^ 'Арго' or w ^ 'Заря' then
 				return false
+			end
+			if w ^ 'alex' then
+				mp:xaction('Talk', _'Беркут')
+				return
 			end
 		end
 		p [[В скафандре неудобно это делать.]];
@@ -1165,7 +1170,7 @@ room {
 		Careful { -"радио"; nam = 'радио';
 			req = false;
 			description = "Радио встроено в скафандр.";
-				before_Ring = function(s, w)
+			before_Ring = function(s, w)
 				mp:xaction("Talk", w)
 			end;
 			daemon = function(s)
@@ -1426,7 +1431,15 @@ room {
 		-"луноход";
 		assembled = false;
 		indoor = false;
+		before_Transfer = function(s, w) if w == me() then mp:xaction('Take', s) else return false end end;
 		['before_Pull,Push,Take'] = function(s)
+			if not s.indoor and not s.assembled and (mp.event == 'Pull' or mp.event == 'Take') then
+				s.assembled = true
+				p [[Ты крепко хватаешься за луноход и вместе с Александром вам удаётся разложить раму.
+				Через несколько минут луноход полностью разложен! Осталось только закрутить крепёжные болты.]]
+				enable 'болты'
+				return
+			end
 			if not s.indoor then
 				return false
 			end
@@ -1442,7 +1455,11 @@ room {
 					p [[Сейчас луноход находится в сложенном состоянии.]]
 				end
 			else
-				p [[Луноход готов к работе!]]
+				if _'болты'.screw then
+					p [[Луноход готов к работе!]]
+				else
+					p [[Луноход почти готов! Осталось закрутить болты.]]
+				end
 			end
 		end;
 		dsc = function(s)
@@ -1461,6 +1478,28 @@ room {
 		end;
 	}:attr 'container,transparent,enterable,~scenery':with {
 		Useless { nam = 'тросы', -"тросы/мн|трос", description = [[Тонкие, но достаточно крепкие.]] }:disable();
+		Useless { nam = 'болты';
+			-"болты,крепёжные болты",
+			screw = false;
+			description = function(s)
+				if s.screw then
+					p [[Все крепёжные болты закручены!]]
+				else
+					p [[Болты уже вставлены, осталось только закрутить их.]];
+				end
+			end;
+			["before_Turn,Close"] = function(s)
+				if not have 'screw' then
+					p [[Но у тебя нет отвёртки!]]
+					return
+				end
+				if s.screw then
+					p [[Тут главное -- не переборщить!]]
+				else
+					p [[Ты затянул крепёжные болты.]];
+				end
+			end;
+		}:disable();
 	};
 	Careful {
 		-"оборудование";
@@ -1958,6 +1997,19 @@ room {
 					end
 				elseif _'buggy':inroom() ^ 'moon1' and not _'buggy'.indoor and s:inroom() ^ 'moontech' and s:once 'moon1' then
 					p [[Александр слезает по лестнице и становится рядом с луноходом.]]
+					move(s, 'moon1')
+					s.mwalk = 0
+				elseif _'buggy':inroom() ^ 'moon1' and not _'buggy'.indoor and not _'buggy'.assembled and here() ^ 'moon1' then
+					s.mwalk = s.mwalk + 1
+					if time()%3 == 1 then
+						p [[Ты слышишь по радио раздражённое мычание Александра.]]
+					else
+						if s.mwalk > 3 then
+							p [[Ты видишь, как Александр безуспешно пытается разложить луноход.]]
+						else
+							p [[Ты видишь, как Александр раскладывает луноход.]]
+						end
+					end
 				end
 				return
 			end
@@ -2016,8 +2068,10 @@ room {
 			end
 		end;
 		description = function(s)
-			if s:inroom 'moontech' and _'buggy':inroom'moontech' then
+			if s:inroom() ^ 'moontech' and _'buggy':inroom'moontech' then
 				p [[Александр готовит луноход к выгрузке.]]
+			elseif s:inroom() ^ 'moon1' and not _'buggy'.assembled then
+				p [[Александр пытается разложить луноход, но в условиях лунной гравитации эта задача оказывается не такой простой.]]
 			else
 				p [[В скафандрах все космонавты похожи друг на друга.]]
 			end
@@ -2186,6 +2240,10 @@ Ephe {
 		end
 		if _'buggy'.indoor then
 			p [[-- Тебе нужна помощь?^-- Да, лучше перестраховаться, командир.]]
+			return
+		end
+		if not _'buggy'.assembled then
+			p [[-- Какие-то проблемы?^-- Да, раму заело. Тяни на себя, командир. Попробуем метод грубой силы.^-- Подожди, я сейчас.]]
 			return
 		end
 		if _'alex':visible() then
