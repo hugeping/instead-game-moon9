@@ -1426,11 +1426,12 @@ room {
 		desc = "Ты можешь подняться в кабину.";
 		walk_to = 'moontech';
 	};
-	Careful {
+	obj {
 		nam = 'buggy';
 		-"луноход";
 		assembled = false;
 		indoor = false;
+		inside_dsc = [[Ты сидишь на месте водителя лунохода.]];
 		['before_Pull,Push,Take,Transfer'] = function(s, w)
 			if not s.indoor and not s.assembled and
 					(mp.event == 'Pull' or mp.event == 'Take' or w == me()) then
@@ -1456,7 +1457,7 @@ room {
 				end
 			else
 				if _'болты'.screw then
-					p [[Луноход готов к работе!]]
+					p [[Луноход позволяет передвигаться по Луне со скоростью 20 километров в час.]]
 				else
 					p [[Луноход почти готов! Осталось закрутить болты.]]
 				end
@@ -1474,9 +1475,17 @@ room {
 				p [[Кататься в луноходе ты будешь на Луне.]]
 				return
 			end
+			if not s.assembled then
+				p [[Но луноход находится в сложенном состоянии.]]
+				return
+			end
+			if not _'болты'.screw then
+				p [[Луноход собран не до конца. Нужно закрутить болты.]]
+				return
+			end
 			return false
 		end;
-	}:attr 'container,transparent,enterable,~scenery':with {
+	}:attr 'container,open,transparent,enterable,~scenery':with {
 		Useless { nam = 'тросы', -"тросы/мн|трос", description = [[Тонкие, но достаточно крепкие.]] }:disable();
 		Useless { nam = 'болты';
 			-"болты,крепёжные болты",
@@ -1532,16 +1541,36 @@ room {
 	nam = 'moon1';
 	title = 'У лунного модуля';
 	in_to = 'moontech';
+	["before_Walk,Enter"] = function(s, w)
+		if w ^ '@w_to' or w ^ 'пар' then
+			if not me():inside'buggy' then
+				p [[Слишком далеко, чтобы идти пешком.]]
+				return
+			end
+			p [[TODO]]
+			return
+		end
+		return false
+	end;
 	enter = function(s)
 		if s:once() then
 			p [[Ты осторожно спускаешься по лестнице и осматриваешься. Перед тобой разворачивается чужой и мёртвый мир.]]
 		end
 	end;
-	dsc = [[Ты стоишь у лунного модуля. Вокруг простирается безжизненный лунный пейзаж. На востоке в чёрном небе ты видишь Землю.]];
+	dsc = function(s)
+		if not me():inside'buggy' then
+			p [[Ты стоишь у лунного модуля.]]
+		end
+	 	p [[Вокруг простирается безжизненный лунный пейзаж. В чёрном небе ты видишь Землю.]];
+	 	if not disabled 'пар' then
+	 		p [[На западе клубится розовый пар.]];
+	 	end
+	end;
 }:with {
 	'moonsky',
 	Careful { -"опоры/мн|опора", description = "Опоры погружены в лунную пыль." };
 	Useless { -"пыль", description = [[Она здесь повсюду.]]; };
+	Distance { nam ='пар', -"пар|облако", description = [[До него несколько сотен метров. Интересно, что он из себя представляет? Газовый выброс?]] };
 	door {
 		-"модуль,корабль";
 		description = [[Необычно видеть модуль снаружи. Небольшая лестница ведёт к входной двери.]];
@@ -1733,6 +1762,7 @@ room {
 			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
 			["before_Push,Pull"] = function(s)
 				if gravity then
+					if _'moonmod'.height == 0 then return "Ничего не произошло." end
 					if _'panel'.prog then
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
@@ -1784,6 +1814,7 @@ room {
 			end;
 			["before_PushRight,PushLeft"] = function(s)
 				if gravity then
+					if _'moonmod'.height == 0 then return "Ничего не произошло." end
 					if _'panel'.prog then
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
@@ -1816,6 +1847,7 @@ room {
 			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
 			before_Push = function(s)
 				if gravity then
+					if _'moonmod'.height == 0 then return "Ничего не произошло." end
 					if _'panel'.prog then
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
@@ -1844,6 +1876,7 @@ room {
 			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
 			["before_PushRight,PushLeft"] = function(s)
 				if gravity then
+					if _'moonmod'.height == 0 then return "Ничего не произошло." end
 					if _'panel'.prog then
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
@@ -1859,6 +1892,7 @@ room {
 			end;
 			["before_Pull"] = function(s,w)
 				if gravity then
+					if _'moonmod'.height == 0 then return "Ничего не произошло." end
 					if _'panel'.prog then
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
@@ -2011,6 +2045,12 @@ room {
 							p [[Ты видишь, как Александр раскладывает луноход.]]
 						end
 					end
+				elseif here() == s:inroom() and me():inside'buggy' and not s:inside'buggy' then
+					p [[Александр сел в луноход.]]
+					move(s, 'buggy')
+				elseif here() == s:inroom() and not me():inside'buggy' and s:inside'buggy' then
+					p [[Александр покинул луноход.]]
+					move(s, here())
 				end
 				return
 			end
@@ -2298,7 +2338,7 @@ Ephe {
 				return
 			end
 			pn "-- Заря, я Ястреб. Что за преходящие лунные явления?"
-			pn "... Ястреб, Заря. Вы должны уже видеть это. Мы наблюдаем розовые вспышки закрывающие пик, диаметром до 2-х километров."
+			pn "... Ястреб, Заря. Вы должны уже видеть это. Мы наблюдаем розовые вспышки закрывающие пик."
 			pn "-- Заря, я Ястреб. Вы понимаете что это такое?"
 			pn "-- ... Ястреб, Заря. Не вполне. Возможно, это электростатические разряды в пыли. В любом случае, ЦУП принял решение не рисковать. Сажайте модуль восточнее запланированного места."
 			pn "-- Заря, Ястреб. Вас понял."
