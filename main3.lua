@@ -1160,7 +1160,8 @@ room {
 		end;
 		before_Disrobe = function(s)
 			if here() ^ 'sect2' and _'#дверь':has'open'
-				or here() ^ 'агрегатный отсек' then
+				or here() ^ 'агрегатный отсек' or
+				here() ^ 'sect1' and _'gate':has'open' then
 				p [[Без скафандра ты умрёшь!]]
 				return
 			end
@@ -2518,12 +2519,23 @@ cutscene {
 		 _'alex'.state = 7
 	end;
 }
-
+room {
+	nam = 'sect1';
+	title = 'В шлюзе';
+	out_to = 'base';
+	dsc = [[Ты находишься в шлюзе.]];
+}:with {
+	'gate';
+}
 door {
 	-"шлюз,дверь";
 	nam = 'gate';
 	door_to = function(s)
-		return 'sect1';
+		if here() ^ 'base' then
+			return 'sect1'
+		else
+			return 'base'
+		end
 	end;
 	["before_Open,Close"] = [[Шлюзовая дверь не может быть открыта или закрыта в ручном режиме.]];
 	description =function(s)
@@ -2539,6 +2551,10 @@ door {
 				_'gate':attr'~open'
 				p [[Шлюзовая дверь закрылась.]]
 			else
+				if _'скафандр':hasnt'worn' then
+					p [[Но без скафандра ты умрёшь!]]
+					return
+				end
 				_'gate':attr'open'
 				p [[Шлюзовая дверь отъехала в сторону.]]
 			end
