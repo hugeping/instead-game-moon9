@@ -2518,6 +2518,32 @@ cutscene {
 		 _'alex'.state = 7
 	end;
 }
+door {
+	-"шлюз,дверь";
+	nam = 'gate';
+	door_to = function(s)
+		return 'sect1';
+	end;
+	["before_Open,Close"] = [[Шлюзовая дверь не может быть открыта или закрыта в ручном режиме.]];
+	description =function(s)
+		p [[В шлюз ведёт массивная прямоугольная дверь рядом с которой находится красный рычаг.]];
+		return false
+	end;
+}:attr'static,scenery,openable':with {
+	Careful {
+		-"рычаг";
+		description = [[Красный рычаг с помощью которого открывается шлюз.]];
+		["before_Push,Pull"] = function(s)
+			if _'gate':has'open' then
+				_'gate':attr'~open'
+				p [[Шлюзовая дверь закрылась.]]
+			else
+				_'gate':attr'open'
+				p [[Шлюзовая дверь отъехала в сторону.]]
+			end
+		end;
+	};
+}
 room {
 	nam = 'base';
 	title = 'Луна-9';
@@ -2543,6 +2569,7 @@ room {
 		return false
 	end;
 }:with {
+	'gate';
 	'пар';
 	'moonsky';
 	'пыль';
