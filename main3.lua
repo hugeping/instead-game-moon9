@@ -2763,7 +2763,10 @@ room {
 	};
 	Careful {
 		-"колбы|колба|газ";
-		description = [[Похоже, что в этих колбах находится тот самый газ с лунной поверхности.]];
+		description = function(s)
+			p [[Похоже, что в этих колбах находится тот самый газ с лунной поверхности!]];
+			know_gas = true
+		end;
 		before_Take = [[Ты решил не трогать колбы.]];
 	};
 	Path {
@@ -2773,6 +2776,7 @@ room {
 	};
 }
 global 'know_panel' (false)
+global 'know_gas' (false)
 room {
 	nam = 'tech';
 	title = 'служебный модуль';
