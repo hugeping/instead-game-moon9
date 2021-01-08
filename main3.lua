@@ -122,6 +122,14 @@ game:dict {
 		"пеленгатором/тв",
 		"пеленгаторе/пр",
 	};
+	["Ливей/мр,од"] = {
+		"Ливей/им",
+		"Ливея/вн",
+		"Ливея/рд",
+		"Ливею/дт",
+		"Ливеем/тв",
+		"Ливее/пр",
+	}
 }
 global 'last_talk' (false)
 function game:before_Ring(w)
@@ -1615,10 +1623,24 @@ room {
 	'грунт',
 	Careful {
 		-"кресло";
+		dsc = function(s)
+			mp:content(s)
+		end;
 		description = function(s)
 			return false;
 		end;
-	}:attr'container,open';
+	}:attr'~scenery,static,container,open':with {
+		obj {
+			suit = true;
+			-"космонавт,астронавт,Лю,Ливей";
+			description = function(s)
+				p [[Это китайский космонавт.]]
+				if s.suit then
+					p [[Лю Ливей -- читаешь ты бирку на его скафандре.]]
+				end
+			end;
+		}
+	};
 	Careful {
 		-"рефрактор|антенна";
 		description = [[Двухметровая антенна радиотелескопа обращена в сторону Земли.]];
