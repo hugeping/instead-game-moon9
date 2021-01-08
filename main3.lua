@@ -1615,7 +1615,7 @@ room {
 			if not me():inside'buggy' then
 				return false
 			end
-			p [[Ты едешь на луноходе к базе".]]
+			p [[Ты едешь на луноходе к базе.]]
 			move('buggy', 'base')
 			return
 		end
