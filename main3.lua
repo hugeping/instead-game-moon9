@@ -1505,7 +1505,7 @@ room {
 					p [[Луноход почти готов! Осталось закрутить болты.]]
 				end
 			end
-			return
+			return false
 		end;
 		dsc = function(s)
 			if s.indoor then
@@ -1529,6 +1529,13 @@ room {
 			end
 			return false
 		end;
+		before_Receive = function(s)
+			if not s.assembled then
+				p [[Но луноход находится в сложенном состоянии!]]
+				return
+			end
+			return false
+		end;
 	}:attr 'container,open,transparent,enterable,~scenery':with {
 		Useless { nam = 'тросы', -"тросы/мн|трос", description = [[Тонкие, но достаточно крепкие.]] }:disable();
 		obj { nam = 'пеленгатор',
@@ -1541,7 +1548,7 @@ room {
 						if know_malapert then
 							p [[Пик Малаперта находится на западе.]]
 						end
-					elseif here() ^ 'malapert' then
+					elseif here() ^ 'malapert' or here() ^ 'device' then
 						p [["Луна-9" находится на востоке.]]
 					elseif here() ^ 'moon1' then
 						p [["Луна-9" находится на западе.]]
@@ -1550,7 +1557,7 @@ room {
 				end
 				return false
 			end;
-		}:attr'switchable,static':disable();
+		}:attr'switchable,static,concealed':disable();
 		Useless { nam = 'болты';
 			-"болты,крепёжные болты",
 			screw = false;
@@ -1603,6 +1610,17 @@ Distance { nam = 'moonsky', -"небо|звёзды/но,мн", description = [[
 room {
 	nam = 'device';
 	title = "Пик Малаперта (запад)";
+	["before_Walk,Enter"] = function(s, w)
+		if w ^ '@e_to' then
+			if not me():inside'buggy' then
+				return false
+			end
+			p [[Ты едешь на луноходе к базе".]]
+			move('buggy', 'base')
+			return
+		end
+		return false
+	end;
 	enter = function(s)
 		if s:once() then
 			p [[Вместе с Александром вы медленно шли по направлению к антенне, вид на которую постепенно открывался из-за холма,
@@ -1611,6 +1629,12 @@ room {
 		end
 	end;
 	out_to = 'malapert';
+	onexit = function(s)
+		if have'spaceman1' then
+			p [[Слишком тяжело ходить с космонавтом в руках.]]
+			return false
+		end
+	end;
 	e_to = 'malapert';
 	dsc = function(s)
 		p [[Ты находишься рядом со странным сооружением, построенным из радиотелескопа. Двухметровый рефрактор обращён на Землю. Рама собрана из рамы радиотелескопа и лунохода. В переплетении проводов ты видишь фрагменты оборудования с лунной станции. В раму встроено кресло. Рядом валяются запчасти лунохода.^^
@@ -1626,20 +1650,43 @@ room {
 		dsc = function(s)
 			mp:content(s)
 		end;
+		before_LetGo = function(s, w)
+			if not w ^ 'spaceman1' then
+				return false
+			end
+			pn [[Ты вытаскиваешь космонавта из кресла и кладёшь на грунт.]]
+			pn [[-- Я сейчас подгоню луноход, командир! -- говорит Александр по радио.]]
+			pn [[-- Да, надо спешить!]]
+			pn [[Александр скрывается за холмом и через пару минут возвращается на луноходе.]]
+			move(w, here())
+			move('alex', 'buggy')
+			move('buggy', here())
+		end;
 		description = function(s)
+			p [[Похоже на кресло пилота.]]
+			if visited 'drag_cab' then
+				p [[Вероятно, это кресло из кабины "Дракона".]]
+			else
+				p [[Откуда оно?]]
+			end
 			return false;
 		end;
 	}:attr'~scenery,static,container,open':with {
 		obj {
 			suit = true;
+			nam = 'spaceman1';
 			-"космонавт,астронавт,Лю,Ливей";
+			before_Pull = function(s)
+				mp:xaction("Take", s)
+			end;
 			description = function(s)
 				p [[Это китайский космонавт.]]
 				if s.suit then
 					p [[Лю Ливей -- читаешь ты бирку на его скафандре.]]
+					p [[Глаза закрыты. Мёртв или нет? Ты не знаешь сколько он пролежал тут в этом кресле. Судя по индикатору, запасов кислорода почти не осталось!]]
 				end
 			end;
-		}
+		}:attr '~animate';
 	};
 	Careful {
 		-"рефрактор|антенна";
