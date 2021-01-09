@@ -1620,6 +1620,7 @@ cutscene {
 		take 'скафандр'
 		_'скафандр':attr'worn'
 		_'alex'.suit = true
+		enable 'радио'
 	end;
 }
 door {
