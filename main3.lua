@@ -519,8 +519,9 @@ cutscene {
 room {
 	nam = 'flowers';
 	-"поляна";
+	title = [[Цветочная поляна.]];
 	-- TODO
-}
+}:attr'supporter';
 
 global 'last_chance' (false)
 room {
