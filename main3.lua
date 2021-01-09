@@ -2317,7 +2317,7 @@ room {
 	nam = 'moon1';
 	vacuum  = true;
 	title = 'У лунного модуля';
-	in_to = 'moontech';
+	in_to = 'door1';
 	["before_Walk,Enter"] = function(s, w)
 		if _'spaceman2'.step >= 1 and isDaemon'spaceman2' then
 			p [[Космонавт не даёт тебе уйти.]]
