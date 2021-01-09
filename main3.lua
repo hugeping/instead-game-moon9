@@ -2610,7 +2610,7 @@ room {
 					else
 						d = -1
 						m.speed = m.speed - 1
-						if m.speed < 2 then
+						if m.speed < -2 then
 							m.speed = -2
 						end
 					end
@@ -2846,6 +2846,9 @@ room {
 				p (" Вертикальная скорость: ", _'moonmod'.vspeed, ".")
 				if _'moonmod'.curspeed ~= 0 then
 					p (" Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
+				end
+				if _'moonmod'.pos >= 100 then
+					p [[^Видимость для посадки -- нормальная!]]
 				end
 				pn()
 				return
@@ -3218,7 +3221,7 @@ Ephe {
 		if _'alex'.state == 5 then
 			if _'moonmod'.pos >= 100 then
 				pn "-- Заря, я Ястреб! Вышли из зоны явления. Садимся!"
-				pm "... -- Ястреб, Заря желает вам успешного прилунения!"
+				pn "... -- Ястреб, Заря желает вам успешного прилунения!"
 				return
 			end
 			pn "-- Заря, я Ястреб. Что за преходящие лунные явления?"
