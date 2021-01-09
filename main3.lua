@@ -2590,6 +2590,7 @@ room {
 			-"правая ручка,ручка,правая/но";
 			description = [[Это ручка управления тангажом и креном. Ты можешь двигать её: влево, вправо, вперёд и назад.]];
 			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
+			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
 			["before_Push,Pull"] = function(s)
 				if gravity then
 					if _'moonmod'.height == 0 then return "Ничего не произошло." end
