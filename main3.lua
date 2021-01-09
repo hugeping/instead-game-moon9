@@ -1551,6 +1551,17 @@ room {
 		Useless { nam = 'тросы', -"тросы/мн|трос", description = [[Тонкие, но достаточно крепкие.]] }:disable();
 		obj { nam = 'пеленгатор',
 			-"пеленгатор/но|антенна",
+			before_Attack = function(s)
+				if mission then
+					if 	not _'запчасти'.got then
+						p [[В пеленгаторе нет нужных лунной принцессе деталей.]]
+					else
+						p [[Ты уже достал нужные детали.]]
+					end
+					return
+				end
+				return false
+			end;
 			description = function(s)
 				p [[Пеленгатор, благодаря узконаправленной антенне, позволяет двигаться на сигналы навигационных маяков.]];
 				if s:has 'on' then
