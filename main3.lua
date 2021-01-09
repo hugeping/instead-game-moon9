@@ -1200,8 +1200,14 @@ room {
 			before_Ring = function(s, w)
 				mp:xaction("Talk", w)
 			end;
+			before_SwitchOff = function(s)
+				if mission then
+					return false
+				end
+				p [[Не стоит оставаться без радиосвязи.]]
+			end;
 			daemon = function(s)
-				if disabled(s) then return end
+				if disabled(s) or s:hasnt'on' then return end
 				if time() % 3 == 2 then
 					if _'Заря'.req then
 						pn(_'Заря'.req)
@@ -1214,7 +1220,7 @@ room {
 					disable 'пар'
 				end
 			end;
-			}:disable();
+			}:attr'switchable,on':disable();
 	};
 
 	Careful {
@@ -1772,7 +1778,7 @@ room {
 			if not s.fixed then
 				p [[Ты знаешь, что во время последнего (второго) запуска трансмиттера произошёл сбой. Чтобы отремонтировать трансмиттер нужны запчасти. Лунная принцесса хочет, чтобы ты достал их из лунного модуля "Арго".]]
 			else
-				p [[TODO]]
+				walkin 'stage8'
 			end
 		end;
 	}:attr'~scenery,static,container,open':with {
@@ -3700,6 +3706,18 @@ room {
 }
 game.after_Sleep = [[Спать сейчас?]];
 global 'mission' (false)
+cutscene {
+	nam = 'stage8';
+	title = 'Луна-9';
+	text = {
+	[[Ты сел в кресло. Перед тобой в чёрном небе висел серп Земли. {$fmt em|Они} торопили тебя и ты не мог сопротивляться долго. Уверенным движением пальцев ты настроил режим передачи. Осталось только запустить процесс трансмиссии. {$fmt em|Они} готовились. Ты чувствовал их вкрадчивое шептание в закоулках подсознания. Сколько их? Легион!]];
+	[[-- Что же ты медлишь? -- услышал ты глубокий голос лунной принцессы. -- Скоро, мы будем вместе! Начинай!]];
+	[[Твои пальцы сами нашли тумблер и переключили его. Только сейчас ты заметил, как на чёрном небе проступили звёзды.]];
+	[[А потом всё поглотил бледный лунный свет.]];
+	};
+	next_to = 'stage9';
+}
+-- TODO stage9
 cutscene {
 	nam = 'stage7';
 	title = 'Луна-9';
