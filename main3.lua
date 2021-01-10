@@ -6,6 +6,25 @@ fmt.dash = true
 fmt.quotes = true
 require 'parser/mp-ru'
 require 'snapshots'
+
+global 'pics' ({})
+
+function pic_add(v)
+	table.insert(pics, 'gfx/'..v..'.png')
+end
+
+function game:pic()
+	local pix = 'blank:192x576'
+	local len = #pics
+	local i = len - 3
+	if i <= 0 then i = 1 end
+	while i <= len do
+		pix = pix ..';'.. pics[i]..'@0,'..tostring((i-1)*192)
+		i = i + 1
+	end
+	return pix
+end
+
 mp.cursor = fmt.img 'gfx/cursor.png'
 mp.msg.Enter.EXITBEFORE = function()
 	if me():where() ^'place' then
@@ -334,6 +353,7 @@ Useless= Class {
 }:attr 'scenery'
 
 function init()
+	pic_add '1'
 	walk 'home'
 end
 function start()
@@ -703,6 +723,7 @@ room {
 	end;
 	["before_Ring,Answer"] = function(s)
 		if isDaemon 'телефон' then
+			pic_add '2'
 			DaemonStop 'телефон'
 			if mission then
 				p [[-- Да!^-- Что же ты медлишь.  Или ты забыл меня? -- ты с ужасом слышишь знакомый глубокий голос.^-- Сколько ещё нужно тебе страданий чтобы понять, что я твоя принцесса? К делу! {$fmt em|Мы} устали ждать! Скорее! Я не откажу тебе ни в чём и никогда!^
@@ -788,6 +809,9 @@ cutscene {
 cutscene {
 	nam = 'title';
 	title = "Луна-9";
+	enter = function(s)
+		pic_add '3'
+	end;
 	text = [[15 ноября 2043 года пилотируемый космический корабль "Арго-3" успешно достиг орбиты Луны. На 17 дней раньше ранее запланированного срока.^^
 	Командир: Борис Громов^
 	Пилот командного модуля: Сергей Чернов^
