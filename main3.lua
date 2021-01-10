@@ -16,10 +16,13 @@ end
 function game:pic()
 	local pix = 'blank:192x576'
 	local len = #pics
-	local i = len - 3
+	local i = len - 3 + 1
+	print(len)
 	if i <= 0 then i = 1 end
+	local k = 0
 	while i <= len do
-		pix = pix ..';'.. pics[i]..'@0,'..tostring((i-1)*192)
+		pix = pix ..';'.. pics[i]..'@0,'..tostring(k*192)
+		k = k + 1
 		i = i + 1
 	end
 	return pix
@@ -1651,6 +1654,7 @@ cutscene {
 		_'скафандр':attr'worn'
 		_'alex'.suit = true
 		enable 'радио'
+		pic_add '4'
 	end;
 }
 door {
