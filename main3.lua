@@ -1,4 +1,3 @@
---$Name: Луна-9$
 --$Version: 0.1$
 --$Author: Пётр Косых$
 
@@ -90,7 +89,8 @@ Verb {
 	"ответ/ить,отвеч/ать",
 	":Answer",
 	"{noun}/дт : Answer",
-	"на {ring} : Answer"
+	"на {ring} : Answer",
+	"по {noun}/дт : Ring",
 }
 
 VerbExtend {
@@ -999,17 +999,18 @@ room {
 			mp:xaction("Ring", s)
 		end;
 		before_Ring = function(s)
+			if dark_side() then
+				p [[Пока корабль плывёт над обратной стороной Луны связь с ЦУП невозможна.]]
+				return
+			end
+			if s.ack and _'comp'.speed < 2 then s.ack = false end
 			if not s.ack then
-				if dark_side() then
-					p [[Пока корабль плывёт над обратной стороной Луны связь с ЦУП невозможна.]]
-				else
-					if _'comp'.speed < 2 then
-						s:daemonStop()
-						walk 'stage2'
-						return
-					end
-					p [[Сейчас нет необходимости связываться с ЦУП.]]
+				if _'comp'.speed < 2 then
+					s:daemonStop()
+					walk 'stage2'
+					return
 				end
+				p [[Сейчас нет необходимости связываться с ЦУП.]]
 				return
 			end
 			if me():where() ~= _'кресло' then
@@ -1432,6 +1433,9 @@ room {
 			req = false;
 			description = "Радио встроено в скафандр.";
 			before_Ring = function(s, w)
+				if not w then
+					last_talk = false
+				end
 				mp:xaction("Talk", w)
 			end;
 			before_SwitchOff = function(s)
@@ -1854,13 +1858,11 @@ room {
 				controller = true
 				return
 			end
-			if false then
 			if mission and not _'запчасти'.got then
-				p [[Ты набираешь нужные лунной принцессе запчасти среди оборудования.]]
-				take'запчасти'
-				_'запчасти'.got = true
+				p [[Здесь нет нужных для лунной принцессы запчастей.]]
+--				take'запчасти'
+--				_'запчасти'.got = true
 				return
-			end
 			end
 			if s:once'screw' then
 				p [[Твоё внимание привлекает универсальная дрель.]]
@@ -2751,7 +2753,11 @@ room {
 					return
 				end
 				if docking then
-					p [[Модуль уже удалился от Арго на достаточное расстояние.]]
+					if turned then
+						p [[Хочешь протаранить Арго задом?]]
+					else
+						p [[Модуль уже удалился от Арго на достаточное расстояние.]]
+					end
 				else
 					docking = 1
 					p [[Ты потянул ручку на себя. Маневровые двигатели включились, дав импульс модулю на отчаливание.]];
@@ -2860,7 +2866,9 @@ room {
 					p (" Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
 				end
 				if _'moonmod'.pos >= 100 then
-					p [[^Видимость для посадки -- нормальная!]]
+					p [[^-- Видимость для посадки -- нормальная!]]
+				else
+					p [[^-- Видимость -- плохая!]];
 				end
 				pn()
 				return
@@ -3164,6 +3172,9 @@ Ephe {
 		if _'alex'.state == 5 then
 			if _'moonmod'.pos >= 100 then
 				p [[-- Беркут, кажется, вышли!^-- Да, командир, можно садиться!]];
+				if _'moonmod'.speed ~= 0 then
+					p [[Гаси горизонтальную скорость, командир!]]
+				end
 			else
 				p [[-- Беркут, ты видишь это?^-- Да, командир.]]
 			end
