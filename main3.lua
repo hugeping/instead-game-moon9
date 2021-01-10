@@ -17,7 +17,6 @@ function game:pic()
 	local pix = 'blank:192x576'
 	local len = #pics
 	local i = len - 3 + 1
-	print(len)
 	if i <= 0 then i = 1 end
 	local k = 0
 	while i <= len do
