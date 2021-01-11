@@ -10,19 +10,22 @@ require 'snapshots'
 global 'pics' ({})
 
 function pic_add(v)
-	table.insert(pics, 'gfx/'..v..'.png')
+	for _, it in pairs(pics) do
+		if it == v then
+			return
+		end
+	end
+	table.insert(pics, v)
+	if #pics > 3 then
+		table.remove(pics, 1)
+	end
 end
 
 function game:pic()
 	local pix = 'blank:192x576'
 	local len = #pics
-	local i = len - 3 + 1
-	if i <= 0 then i = 1 end
-	local k = 0
-	while i <= len do
-		pix = pix ..';'.. pics[i]..'@0,'..tostring(k*192)
-		k = k + 1
-		i = i + 1
+	for i = 1, len do
+		pix = pix ..';'.. ('gfx/'..pics[i]..'.png') ..'@0,'..tostring((i-1)*192)
 	end
 	return pix
 end
@@ -548,6 +551,7 @@ room {
 	-"поляна,трава";
 	enter = function(s)
 		s:daemonStart()
+		pic_add '14'
 	end;
 	daemon = function(s)
 		local t = {
@@ -1765,6 +1769,7 @@ room {
 				Через несколько минут луноход полностью разложен! Осталось только закрутить крепёжные болты.]]
 				enable 'болты'
 				enable 'пеленгатор'
+				pic_add '6'
 				return
 			end
 			if not s.indoor then
@@ -1981,6 +1986,7 @@ room {
 		return false
 	end;
 	enter = function(s)
+		pic_add '11'
 		if s:once() then
 			p [[Вместе с Александром вы медленно шли по направлению к антенне, которая постепенно открывалась из-за холма,
 			ожидая увидеть установленный здесь подвижный модуль радиотелескопа с двухметровым рефрактором.^^
@@ -2119,6 +2125,9 @@ room {
 		end
 		return false
 	end;
+	enter = function(s)
+		pic_add '6'
+	end
 }:with {
 	Path {
 		-"радиотелескоп,телескоп|антенна";
@@ -2150,6 +2159,9 @@ room {
 	title = 'Посадочная площадка';
 	n_to = 'base';
 	in_to = 'drag_door';
+	enter = function(s)
+		pic_add '10'
+	end;
 	dsc = function(s)
 		p [[Ты находишься на посадочной площадке базы. Здесь стоит китайский лунный модуль "Дракон".]];
 		if not disabled 'пар' then
@@ -2377,6 +2389,7 @@ room {
 		return false
 	end;
 	enter = function(s)
+		pic_add '5'
 		if s:once() then
 			p [[Ты осторожно спускаешься по лестнице и осматриваешься. Перед тобой разворачивается чужой и мёртвый мир.]]
 			return
@@ -3412,6 +3425,7 @@ cutscene {
 		_'Заря'.ack =[[-- Заря. Ястреб. Мы сели!^
 				... -- Ястреб. Заря. Спасибо за отличную новость! Мы проверили телеметрию, всё в порядке!]]
 		DaemonStart 'alex'
+		pic_add '5'
 	end;
 }
 cutscene {
@@ -3433,6 +3447,7 @@ cutscene {
 		_'alex'.state = 5
 		enable 'клубы'
 		DaemonStart 'panel'
+		pic_add'7'
 	end;
 }
 cutscene {
@@ -3612,6 +3627,7 @@ room {
 	in_to = 'gate';
 	-"база";
 	enter = function(s)
+		pic_add '8'
 		if mission and _'powergen':has'on' then
 			p [[Лунная принцесса хочет, чтобы я заблокировал выход из базы. Чтобы Александр не помешал миссии.]]
 			return
@@ -3736,6 +3752,9 @@ room {
 	title = "Электростанция";
 	dsc = [[Ты находишься у электростанции на солнечных батареях. Ты можешь вернуться к шлюзу.]];
 	s_to = 'base';
+	enter = function(s)
+		pic_add '9'
+	end;
 }:with {
 	Careful {
 		nam = 'powergen';
@@ -3870,6 +3889,7 @@ room {
 		-"постер,плакат";
 		init_dsc = [[На стене висит постер.]];
 		description = function(s)
+			pic_add '12'
 			p [[На постере изображена полуобнажённая девушка. Правой рукой она поправляет волосы. Левая рука небрежно лежит на гибкой талии. На голове у девушки надета корона, искрящаяся серебром. Белоснежная улыбка девушки излучает кокетство и власть.]];
 			if mission then
 				p [[^^С тяжестью на сердце ты понимаешь, что лунная принцесса -- всего лишь изображение на фривольном постере. Но какая разница? Лунная принцесса сказала, что в её мире возможно всё. И что этот мир -- не менее реален чем мир, в котором живут люди.]]
@@ -4049,6 +4069,7 @@ cutscene {
 		inv():zap()
 		DaemonStop 'радио'
 		place('телефон', 'столик')
+		pic_add '1'
 	end
 }
 
@@ -4098,6 +4119,9 @@ cutscene {
 		Ты не заметил как провалился в глубокий сон.^-- Я привёл его, моя принцесса! -- кто сказал это? Не важно, ты спишь.]];
 	};
 	next_to = 'замок';
+	exit = function(s)
+		pic_add '13'
+	end;
 }
 room {
 	-"зал";
