@@ -72,9 +72,14 @@ VerbExtend {
 	"~ с {noun}/тв,scene по {noun}/дт : Ring reverse",
 	":Talk"
 }
+
 VerbExtendWord {
 	"#Exit",
 	"вернуться"
+}
+VerbExtend {
+	"#Exit",
+	"к {noun}/дт,scene : Walk"
 }
 
 Verb {
