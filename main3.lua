@@ -3319,7 +3319,7 @@ Ephe {
 	end;
 }
 Ephe {
-	-"Заря";
+	-"Заря|ЦУП";
 	ack = false;
 	req = false;
 	nam = 'Заря';
