@@ -94,6 +94,24 @@ Verb {
 	"[по|]звон/ить",
 	":Ring"
 }
+
+VerbExtend {
+	"#Wave",
+	"{noun}/тв,held : Wave",
+	"{noun}/дт,scene,live : WaveOther"
+}
+
+function mp:WaveOther(w)
+	if mp:check_touch() then
+		return
+	end
+	return false
+end
+
+function mp:after_WaveOther()
+	p [[Ты глупо помахал {#first/дт}.]]
+end
+
 VerbExtend {
 	"#Push",
 	"{noun}/вн вперёд : Push",
