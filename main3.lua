@@ -748,9 +748,9 @@ cutscene {
 	noparser = true;
 	nam = 'theend';
 	enter = function()
---		if not instead.tiny then
---			fading.set { 'fadewhite', delay = 60, max = 64 }
---		end
+		if not instead.tiny then
+			fading.set { 'fadewhite', delay = 60, max = 64 }
+		end
 		pic_set'14'
 	end;
 	dsc = fmt.c[[{$fmt b|Луна-9}^^
