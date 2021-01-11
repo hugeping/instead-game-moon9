@@ -20,6 +20,9 @@ function pic_add(v)
 		table.remove(pics, 1)
 	end
 end
+function pic_set(v)
+	pics = {v}
+end
 
 function game:pic()
 	local pix = 'blank:192x576'
@@ -551,7 +554,7 @@ room {
 	-"поляна,трава";
 	enter = function(s)
 		s:daemonStart()
-		pic_add '14'
+		pic_set '14'
 	end;
 	daemon = function(s)
 		local t = {
