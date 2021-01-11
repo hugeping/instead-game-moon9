@@ -3150,6 +3150,8 @@ room {
 			if s:has'open' then
 				if not disabled '#serg' then
 					p [[В открытый стыковочный люк заглядывает Сергей.]]
+				else
+					p [[Стыковочный люк открыт.]]
 				end
 			else
 				p [[Стыковочный люк закрыт.]]
