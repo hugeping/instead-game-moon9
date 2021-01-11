@@ -1828,7 +1828,7 @@ room {
 		assembled = false;
 		indoor = false;
 		before_Attack = function(s)
-			if mission and not _'запчасти'.got then
+			if know_parts and not _'запчасти'.got then
 				p [[Здесь нет нужных деталей. Нужно что-то более сложное.]]
 				return
 			end
@@ -1915,7 +1915,7 @@ room {
 		obj { nam = 'пеленгатор',
 			-"пеленгатор/но|антенна",
 			before_Attack = function(s)
-				if mission then
+				if know_parts then
 					if 	not _'запчасти'.got then
 						p [[В пеленгаторе нет нужных лунной принцессе деталей.]]
 					else
@@ -1976,7 +1976,7 @@ room {
 				controller = true
 				return
 			end
-			if mission and not _'запчасти'.got then
+			if know_parts and not _'запчасти'.got then
 				p [[Здесь нет нужных для лунной принцессы запчастей.]]
 --				take'запчасти'
 --				_'запчасти'.got = true
@@ -2134,6 +2134,7 @@ room {
 				return
 			end
 			if not s.fixed then
+				know_parts = true
 				p [[Ты знаешь, что во время последнего (второго) запуска трансмиттера произошёл сбой. Чтобы отремонтировать трансмиттер нужны запчасти. Лунная принцесса хочет, чтобы ты достал их из лунного модуля "Арго".]]
 			else
 				walkin 'stage8'
@@ -2635,7 +2636,7 @@ room {
 		broken = false;
 		-"панель управления,панель,прибор*|компьютер";
 		before_Attack = function(s, w)
-			if not mission then
+			if not know_parts then
 				return
 			end
 			if _'запчасти'.got then
@@ -3704,6 +3705,8 @@ obj {
 	как делать.]];
 }
 
+global 'know_parts' (false)
+
 room {
 	nam = 'base';
 	vacuum = true;
@@ -3714,10 +3717,11 @@ room {
 	-"база";
 	enter = function(s)
 		pic_add '8'
-		if mission and _'powergen':has'on' then
+		if mission and (_'powergen':has'on' or _'gate':has'open') then
 			p [[Лунная принцесса хочет, чтобы я заблокировал выход из базы. Чтобы Александр не помешал миссии.]]
 			return
 		elseif mission and not _'запчасти'.got then
+			know_parts = true
 			p [[Ты знаешь, что во время последнего (второго) запуска трансмиттера произошёл сбой. Чтобы отремонтировать трансмиттер нужны электронные запчасти.]]
 		end
 	end;
@@ -3868,7 +3872,7 @@ room {
 				return false
 			end
 			power = false
-			if mission then
+			if mission and _'gate':hasnt'open' then
 				p [[Ты выключаешь станцию и теперь дверь в базу заблокирована. Теперь лунная принцесса желает, чтобы ты начал процесс переноса.]]
 				s:attr'~on'
 				return
