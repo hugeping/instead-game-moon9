@@ -30,10 +30,10 @@ function pic_set(v)
 end
 
 function game:pic()
-	local pix = 'blank:192x576'
+	local pix = 'box:192x576,#ffffe8'
 	local len = #pics
 	if theme.name() == '.mobile' then
-		pix = 'blank:576x192'
+		pix = 'box:576x192,#ffffe8'
 		for i = 1, len do
 			pix = pix ..';'.. ('gfx/'..pics[i]..'.png') ..'@'..tostring((i-1)*192)..",0"
 		end
