@@ -3,10 +3,12 @@
 --$Author: Пётр Косых$
 
 require "fmt"
+if not instead.tiny then
 require "fading"
-require "link"
 require "theme"
 require "autotheme"
+end
+require "link"
 
 fmt.dash = true
 fmt.quotes = true
