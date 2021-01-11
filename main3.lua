@@ -4,6 +4,9 @@
 require "fmt"
 require "fading"
 require "link"
+require "theme"
+require "autotheme"
+
 fmt.dash = true
 fmt.quotes = true
 require 'parser/mp-ru'
@@ -29,8 +32,15 @@ end
 function game:pic()
 	local pix = 'blank:192x576'
 	local len = #pics
-	for i = 1, len do
-		pix = pix ..';'.. ('gfx/'..pics[i]..'.png') ..'@0,'..tostring((i-1)*192)
+	if theme.name() == '.mobile' then
+		pix = 'blank:576x192'
+		for i = 1, len do
+			pix = pix ..';'.. ('gfx/'..pics[i]..'.png') ..'@'..tostring((i-1)*192)..",0"
+		end
+	else
+		for i = 1, len do
+			pix = pix ..';'.. ('gfx/'..pics[i]..'.png') ..'@0,'..tostring((i-1)*192)
+		end
 	end
 	return pix
 end
