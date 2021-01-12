@@ -557,6 +557,7 @@ obj {
 			p(s.talk[s.talk_step])
 		end
 	end;
+	before_Smell = [[Едва уловимый запах духов.]];
 	['before_Touch,Kiss,Taste'] = function(s)
 		if s.talk2 then
 			p [[Ты поглаживаешь Ларису по волосам.]]
@@ -665,6 +666,7 @@ room {
 		nam = 'лариса';
 		-"Лариса,жена";
 		["before_Attack,Push"] = [[Странная мысль, которая уплыла из твоей головы словно облако.]];
+		before_Smell = [[Лариса пахнет цветами.]];
 		["before_Kiss,Touch,Taste,Pull"] = [[Лариса тихонько смеётся. Её смех похож на журчание прохладного ручейка.]];
 		talk = 0;
 		before_Talk = function(s)
