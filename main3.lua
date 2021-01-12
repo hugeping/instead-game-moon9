@@ -1474,6 +1474,20 @@ room {
 		walk_to = 'люк';
 	};
 }
+
+stick_transfer = function(s, w)
+	if w == me() or w ^ '@out_to' then
+		mp:xaction("Pull", s)
+	elseif w ^ '@u_to' then
+		mp:xaction("Push", s)
+	elseif w ^ '@d_to' then
+		mp:xaction("Pull", s)
+	else
+		return false
+	end
+end;
+
+
 room {
 	nam = 'sect2';
 	title = "служебный отсек";
@@ -1525,8 +1539,7 @@ room {
 		on = true;
 		dsc = [[В стену встроен рычаг, блокирующий дверь в агрегатный отсек.]];
 		description = [[Рычаг покрашен в красный цвет, чтобы напоминать экипаж об опасности выхода в негерметичный агрегатный отсек.]];
-		before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
-
+		before_Transfer = stick_transfer;
 		['before_Push,Pull'] = function(s)
 			if _'#дверь':has 'open' then
 				p [[Сначала нужно закрыть дверь.]]
@@ -1825,7 +1838,7 @@ door {
 	obj {
 		-"рычаг,красный рычаг";
 		description = [[С помощью рычага можно управлять выходной дверью.]];
-		before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
+		before_Transfer = stick_transfer;
 		["before_Push,Pull"] = function(s)
 			if not gravity then
 				p [[В твоих планах на сегодня не было выхода в открытый космос.]]
@@ -2424,7 +2437,7 @@ door {
 	obj {
 		-"рычаг,красный рычаг";
 		description = [[С помощью рычага можно управлять выходной дверью.]];
-		before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
+		before_Transfer = stick_transfer;
 		["before_Push,Pull"] = function(s)
 			if _'drag_door':hasnt 'open' then
 				_'drag_door':attr 'open'
@@ -2614,6 +2627,7 @@ local dirs = {
 	w = 'запад'
 }
 global 'manual_docking' (false)
+
 room {
 	nam = 'moonmod';
 	dir = 'w';
@@ -2800,7 +2814,7 @@ room {
 			-"правая ручка,ручка,правая/но";
 			description = [[Это ручка управления тангажом и креном. Ты можешь двигать её: влево, вправо, вперёд и назад.]];
 			before_Turn = [[Ты можешь двигать ручку: вправо, влево, вперёд и назад.]];
-			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
+			before_Transfer = stick_transfer;
 			["before_Push,Pull"] = function(s)
 				if gravity then
 					if _'moonmod'.height == 0 then return "Ничего не произошло." end
@@ -2942,7 +2956,7 @@ room {
 					end
 				end
 			end;
-			before_Transfer = function(s, w) if w == me() or w ^ '@out_to' then mp:xaction("Pull", s) else return false end end;
+			before_Transfer = stick_transfer;
 			["before_PushRight,PushLeft"] = function(s)
 				if gravity then
 					if _'moonmod'.height == 0 then return "Ничего не произошло." end
