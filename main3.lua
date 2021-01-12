@@ -2876,7 +2876,7 @@ room {
 
 					m.vspeed = m.vspeed + rnd(3)
 					if m.vspeed > 7 then m.vspeed = 7 end
-					p [[Плавным движением ручки ты изменил вертикальную скорость.]]
+					p [[Плавным движением ручки вперёд ты изменил вертикальную скорость.]]
 					return
 				end
 				if not manual_docking then
@@ -2928,7 +2928,7 @@ room {
 					local m = _'moonmod'
 					m.vspeed = m.vspeed - rnd(3)
 					if m.vspeed < -7 then m.vspeed = -7 end
-					p [[Плавным движением ручки ты изменил вертикальную скорость.]]
+					p [[Плавным движением ручки назад ты изменил вертикальную скорость.]]
 					return
 				end
 				if not manual_docking then
@@ -3046,8 +3046,9 @@ room {
 				end
 				p ("-- Высота: ", _'moonmod'.height,".")
 				p (" Вертикальная скорость: ", _'moonmod'.vspeed, ".")
+				if (_'moonmod'.vspeed < 0) then p "Снижаемся!" end
 				if _'moonmod'.curspeed ~= 0 then
-					p (" Направление: ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
+					p (" Движемся на ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
 				end
 				if _'moonmod'.pos >= 100 then
 					p [[^-- Видимость для посадки -- нормальная!]]
