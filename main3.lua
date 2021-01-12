@@ -3387,7 +3387,7 @@ room {
 							p [[Болтик нужен для крепления крыла.]]
 							return
 						end
-						take 'болтик'
+						return false
 					end;
 					before_Turn = function(s)
 						if not have'screw' then
