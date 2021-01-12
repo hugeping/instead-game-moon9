@@ -336,7 +336,11 @@ Path = Class {
 	end;
 	before_Default = function(s)
 		if s.desc then
-			p(s.desc)
+			if type(s.desc) == 'function' then
+				s:desc()
+			else
+				p(s.desc)
+			end
 			return
 		end
 		p ([[Ты можешь пойти в ]], std.ref(s.walk_to):noun('вн'), '.');
@@ -758,7 +762,7 @@ cutscene {
 	dsc = fmt.c[[{$fmt b|Луна-9}^^
 {$fmt em|Пётр Косых / Январь 2021}^
 {$fmt em|Графика: Пётр Косых, фотография из НАСА}^
-{$fmt em|Тестирование: Oleg Bosh, Excelenter}^^
+{$fmt em|Тестирование: Oleg Bosh, Excelenter, Kerber}^^
 Спасибо вам за прохождение игры!^
 Если вам понравилось, вы можете найти похожие игры на:^^
 {$link|http://instead-games.ru}^
@@ -3722,7 +3726,7 @@ room {
 			return
 		elseif mission and not _'запчасти'.got then
 			know_parts = true
-			p [[Ты знаешь, что во время последнего (второго) запуска трансмиттера произошёл сбой. Чтобы отремонтировать трансмиттер нужны электронные запчасти.]]
+			p [[Ты знаешь, что во время последнего запуска трансмиттера произошёл сбой. Чтобы отремонтировать трансмиттер нужны электронные запчасти.]]
 		end
 	end;
 	dsc = function(s)
