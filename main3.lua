@@ -1,6 +1,7 @@
 --$Name: Луна-9$
 --$Version: 0.3$
 --$Author: Пётр Косых$
+xact.walk = walk
 
 require "fmt"
 if not instead.tiny then
@@ -773,8 +774,29 @@ cutscene {
 {$link|https://instead.itch.io}^^
 А если хотите написать свою историю,^добро пожаловать на:^
 {$link|https://instead3.syscall.ru}^^
-{$fmt b|КОНЕЦ}
+{$fmt b|КОНЕЦ}^^
+{@ walk галерея|Галерея}
 ]];
+}
+
+cutscene {
+	nam = 'галерея';
+	title = '{$fmt c|Галерея}';
+	text = function(s, n)
+		if n == 15 then
+			return false
+		end
+		instead.need_fading(true)
+		if n == 1 then
+			pic_set(tostring(n))
+			pic_add('2')
+			pic_add('3')
+		elseif n > 2 and n < 14 then
+			pic_add(tostring(n + 1))
+		end
+		p(fmt.c(fmt.img('gfx/big/'..tostring(n).. '.png')))
+	end;
+	next_to = 'theend';
 }
 
 global 'last_chance' (false)
