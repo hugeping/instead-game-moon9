@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 0.2$
+--$Version: 0.3$
 --$Author: Пётр Косых$
 
 require "fmt"
@@ -2875,8 +2875,12 @@ room {
 					local m = _'moonmod'
 
 					m.vspeed = m.vspeed + rnd(3)
-					if m.vspeed > 7 then m.vspeed = 7 end
-					p [[Плавным движением ручки вперёд ты изменил вертикальную скорость.]]
+					if m.vspeed > 7 then
+						m.vspeed = 7
+						p [[Скорость подъёма и так достаточно большая. Не стоит её увеличивать!]]
+						return
+					end
+					p [[Плавным движением ручки вперёд ты увеличил вертикальную тягу.]]
 					return
 				end
 				if not manual_docking then
@@ -2905,7 +2909,11 @@ room {
 						p [[Сначала нужно перевести модуль в режим ручного управления.]]
 						return
 					end
-					p [[Плавным движением ручки ты сдвинул лунный модуль в сторону.]]
+					if mp.event == 'PushRight' then
+						p [[Плавным движением ручки ты сдвинул лунный модуль правее.]]
+					else
+						p [[Плавным движением ручки ты сдвинул лунный модуль левее.]]
+					end
 					return
 				end
 				if not manual_docking then
@@ -2927,8 +2935,12 @@ room {
 					end
 					local m = _'moonmod'
 					m.vspeed = m.vspeed - rnd(3)
-					if m.vspeed < -7 then m.vspeed = -7 end
-					p [[Плавным движением ручки назад ты изменил вертикальную скорость.]]
+					if m.vspeed < -7 then
+						m.vspeed = -7
+						p [[Скорость падения и так высокая. Не стоит увеличивать её ещё больше!]]
+						return
+					end
+					p [[Плавным движением ручки назад ты уменьшил вертикальную тягу.]]
 					return
 				end
 				if not manual_docking then
@@ -3044,11 +3056,14 @@ room {
 				if not here() ^ 'moonmod' then
 					return
 				end
-				p ("-- Высота: ", _'moonmod'.height,".")
-				p (" Вертикальная скорость: ", _'moonmod'.vspeed, ".")
+				p ("-- Высота ", _'moonmod'.height,".")
+				p (" Вертикальная скорость ", _'moonmod'.vspeed, ".")
 				if (_'moonmod'.vspeed < 0) then p "Снижаемся!" end
 				if _'moonmod'.curspeed ~= 0 then
-					p (" Движемся на ", dirs[_'moonmod'.dir], ".", " Скорость: ", _'moonmod'.curspeed)
+					p (" Ориентация на ", dirs[_'moonmod'.dir], ".", " Скорость ", _'moonmod'.curspeed,".")
+					if (_'moonmod'.curspeed < 0) then
+						p [[Движемся назад!]]
+					end
 				end
 				if _'moonmod'.pos >= 100 then
 					p [[^-- Видимость для посадки -- нормальная!]]
