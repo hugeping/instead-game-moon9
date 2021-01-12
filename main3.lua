@@ -39,7 +39,7 @@ end
 function game:pic()
 	local pix = 'box:192x576,#ffffe8'
 	local len = #pics
-	if theme.name() == '.mobile' then
+	if not instead.tiny and theme.name() == '.mobile' then
 		pix = 'box:576x192,#ffffe8'
 		for i = 1, len do
 			pix = pix ..';'.. ('gfx/'..pics[i]..'.png') ..'@'..tostring((i-1)*192)..",0"
