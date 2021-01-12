@@ -3322,6 +3322,7 @@ room {
 				me().scope:add 'Заря'
 				me().scope:add 'Арго'
 			end
+			_'locks':disable()
 			return false
 		end;
 		before_Enter = function(s)
