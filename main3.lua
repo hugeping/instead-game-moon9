@@ -784,7 +784,7 @@ cutscene {
 	title = false;
 	text = function(s, n)
 		mp:clear()
-		if n == 16 then
+		if n == 17 then
 			return false
 		end
 		instead.need_fading(true)
