@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 0.1$
+--$Version: 0.2$
 --$Author: Пётр Косых$
 
 require "fmt"
@@ -15,6 +15,9 @@ fmt.quotes = true
 require 'parser/mp-ru'
 require 'snapshots'
 
+if not instead.tiny then
+mp:pager_mode(true)
+end
 global 'pics' ({})
 
 function pic_add(v)
