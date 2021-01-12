@@ -781,8 +781,9 @@ cutscene {
 
 cutscene {
 	nam = 'галерея';
-	title = '{$fmt c|Галерея}';
+	title = false;
 	text = function(s, n)
+		mp:clear()
 		if n == 16 then
 			return false
 		end
@@ -794,6 +795,24 @@ cutscene {
 		elseif n > 2 and n < 14 then
 			pic_add(tostring(n + 1))
 		end
+		local t = {
+			'Окно',
+			'Звонок',
+			'Прибытие',
+			'Арго-3 и лунный модуль',
+			'На Луне',
+			'Луноход',
+			'Лунное явление',
+			'Луна-9',
+			'Электростанция',
+			'Китайский лунный модуль',
+			'Трансмиттер',
+			'Лунная принцесса',
+			'Во дворце лунной принцессы',
+			'Цветочная поляна',
+			'Разработка игры',
+		}
+		pn(fmt.c(fmt.b(t[n])))
 		p(fmt.c(fmt.img('gfx/big/'..tostring(n).. '.png')))
 	end;
 	next_to = 'theend';
