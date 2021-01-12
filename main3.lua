@@ -765,7 +765,7 @@ cutscene {
 	dsc = fmt.c[[{$fmt b|Луна-9}^^
 {$fmt em|Пётр Косых / Январь 2021}^
 {$fmt em|Графика: Пётр Косых, фотография из НАСА}^
-{$fmt em|Тестирование: Oleg Bosh, Khaelenmore ThaaL, Excelenter, Kerber}^^
+{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Excelenter, Kerber}^^
 Спасибо вам за прохождение игры!^
 Если вам понравилось, вы можете найти похожие игры на:^^
 {$link|http://instead-games.ru}^
@@ -1908,6 +1908,10 @@ room {
 				p [[Луноход собран не до конца. Нужно закрутить болты.]]
 				return
 			end
+			if not _'болтик'.screw then
+				p [[Нужно закрепить переднее крыло. Иначе пыль будет сильно мешать.]]
+				return
+			end
 			return false
 		end;
 		before_Receive = function(s)
@@ -1919,6 +1923,24 @@ room {
 		end;
 	}:attr 'container,open,transparent,enterable,~scenery':with {
 		Useless { nam = 'тросы', -"тросы/мн|трос", description = [[Тонкие, но достаточно крепкие.]] }:disable();
+		Careful { nam = 'крыло', -"крыло",
+			description = function(s)
+				p "Крыло лунохода."
+				if not _'болтик'.screw then
+					p [[Чтобы его закрепить нужен ещё один болтик]]
+				else
+					p [[Надёжно закреплено!]]
+				end
+			end;
+			before_Receive = function(s, w)
+				if w ^ 'болтик' then
+					p [[Ты вставил болтик в крыло.]]
+					move(w, s)
+					return
+				end
+				p [[В крыло можно вставить только болтик.]]
+			end;
+		}:attr'static':disable();
 		obj { nam = 'пеленгатор',
 			-"пеленгатор/но|антенна",
 			before_Attack = function(s)
@@ -1968,7 +1990,9 @@ room {
 				if s.screw then
 					p [[Тут главное -- не переборщить!]]
 				else
-					p [[Ты затянул крепёжные болты.]];
+					p [[Ты затянул крепёжные болты. Заканчивая работу, ты заметил, что переднее правое крыло
+					лунохода едва держится на единственном болтике. Нужно найти ещё один!]];
+					enable 'крыло'
 					s.screw = true
 				end
 			end;
@@ -3284,8 +3308,37 @@ room {
 				obj {
 					nam = 'болтик';
 					know = false;
+					screw = false;
 					-"болтик,болт";
 					init_dsc = [[В механизме привода замка застрял болтик.]];
+					["before_Take,Remove"] = function(s)
+						if _'болтик'.screw then
+							p [[Болтик нужен для крепления крыла.]]
+							return
+						end
+						take 'болтик'
+					end;
+					before_Turn = function(s)
+						if not have'screw' then
+							p [[У тебя нет необходимого инструмента.]]
+							return
+						end
+						if s.screw then
+							p [[Уже закручен.]]
+							return
+						end
+						local w = s:where()
+						if w == me() or std.is_obj(w, 'room') then
+							p [[Сначала нужно вставить болтик куда-нибудь.]]
+							return
+						end
+						if w ^ 'крыло' then
+							s.screw = true
+							p [[Ты закрутил болтик. Теперь крыло надёжно закреплено!]]
+							return
+						end
+						p ([[Нет необходимости закручивать болтик в ]], w:noun 'вн', ".")
+					end;
 					description = function(s)
 						s.know = true;
 						if s:where() ^ 'lock' then
