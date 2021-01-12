@@ -3761,6 +3761,7 @@ room {
 				p [[Ты забираешь скафандр.]]
 				p [[Александр тоже берёт свой скафандр из шкафа.]]
 				_'alex'.suit = true
+				take(w)
 				return
 			end
 			return false
