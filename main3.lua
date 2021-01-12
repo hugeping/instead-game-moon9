@@ -783,7 +783,7 @@ cutscene {
 	nam = 'галерея';
 	title = '{$fmt c|Галерея}';
 	text = function(s, n)
-		if n == 15 then
+		if n == 17 then
 			return false
 		end
 		instead.need_fading(true)
