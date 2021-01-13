@@ -768,7 +768,7 @@ cutscene {
 	dsc = fmt.c[[{$fmt b|Луна-9}^^
 {$fmt em|Пётр Косых / Январь 2021}^
 {$fmt em|Графика: Пётр Косых, фотография из НАСА}^
-{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Excelenter, Kerber}^^
+{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Zlobot, Excelenter, Kerber}^^
 Спасибо вам за прохождение игры!^
 Если вам понравилось, вы можете найти похожие игры на:^^
 {$link|http://instead-games.ru}^
