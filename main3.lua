@@ -4280,7 +4280,7 @@ room {
 room {
 	nam = 'sklad';
 	title = 'складской модуль';
-	-"складской модуль";
+	-"складской модуль,склад";
 	out_to = 'liv';
 	s_to = 'liv';
 	dsc = function(s)
