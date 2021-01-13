@@ -1,5 +1,5 @@
---$Name: Луна-9$
---$Version: 0.3$
+--$Name: Луна-9$\
+--$Version: 0.4$
 --$Author: Пётр Косых$
 xact.walk = walk
 
@@ -768,7 +768,7 @@ cutscene {
 	dsc = fmt.c[[{$fmt b|Луна-9}^^
 {$fmt em|Пётр Косых / Январь 2021}^
 {$fmt em|Графика: Пётр Косых, фотография из НАСА}^
-{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Zlobot, Excelenter, Kerber}^^
+{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Zlobot, Excelenter, V.V., Kerber}^^
 Спасибо вам за прохождение игры!^
 Если вам понравилось, вы можете найти похожие игры на:^^
 {$link|http://instead-games.ru}^
@@ -1966,6 +1966,10 @@ room {
 			end
 			if not _'болтик'.screw then
 				p [[Нужно закрепить переднее крыло. Иначе пыль будет сильно мешать.]]
+				return
+			end
+			if have 'spaceman1' then
+				p [[Управлять луноходом с космонавтом в руках?]]
 				return
 			end
 			return false
