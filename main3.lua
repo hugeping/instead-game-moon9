@@ -577,7 +577,7 @@ obj {
 		before_Kiss = function(s)
 			mp:xaction("Kiss", _'жена')
 		end;
-		description = [[В глазах Ларисы ты видишь своё отражение.]];
+		description = [[В глазах Ларисы ты видишь своё {$fmt em|отражение}.]];
 	}:disable():with {
 		Ephe {
 			-"отражение";
