@@ -2,7 +2,7 @@
 --$Version: 0.4$
 --$Author: Пётр Косых$
 xact.walk = walk
-
+require "snd"
 require "fmt"
 if not instead.tiny then
 require "fading"
@@ -760,6 +760,7 @@ cutscene {
 	noparser = true;
 	nam = 'theend';
 	enter = function()
+		snd.music'mus/end.ogg'
 		if not instead.tiny then
 			fading.set { 'fadewhite', delay = 60, max = 64 }
 		end
@@ -768,6 +769,7 @@ cutscene {
 	dsc = fmt.c[[{$fmt b|Луна-9}^^
 {$fmt em|Пётр Косых / Январь 2021}^
 {$fmt em|Графика: Пётр Косых, фотография из НАСА}^
+{$fmt em|Трек: Novus Initium by Alexander Nakarada}^
 {$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Zlobot, Excelenter, V.V., Kerber}^^
 Спасибо вам за прохождение игры!^
 Если вам понравилось, вы можете найти похожие игры на:^^
@@ -929,7 +931,7 @@ cutscene {
 		-- Приезжай, всё узнаешь. И.. Передай Ларисе мои извинения... У тебя всё в порядке? Голос какой-то...]];
 		[[-- Всё в порядке, Саша, завтра буду.^
 		-- Хорошо, до встречи.]],
-		[[Ты смотришь в ночное окно. В затянутом дымке осеннем небе не видно звёзд.]];
+		[[Ты смотришь в ночное окно. В затянутом дымкой осеннем небе не видно звёзд.]];
 	};
 	next_to = 'title'
 }
