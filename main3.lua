@@ -3333,9 +3333,17 @@ room {
 			return false
 		end;
 		before_Enter = function(s)
-			p  [[О командном модуле позаботится Сергей.]];
+			if s:has'open' then
+				if not disabled 'locks' and  _'болтик':inside 'lock' then
+					p [[Ты можешь осмотреть стыковочные замки.]]
+				else
+					p [[О командном модуле позаботится Сергей.]];
+				end
+			else
+				p [[Люк закрыт.]]
+			end
 		end;
-	}:attr'openable,open,static':with {
+	}:attr'openable,open,static,enterable':with {
 		Careful {
 			nam = 'locks';
 			-"стыковочные замки|замки";
