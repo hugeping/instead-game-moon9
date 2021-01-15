@@ -3215,7 +3215,9 @@ room {
 			if s.radio then
 				s.radio = s.radio + 1
 				if _'скафандр':hasnt'worn' and s.radio > 0 then
-					p [[Александр машет тебе правой рукой и стучит левой по своему шлему. Нужно проверить связь.]]
+					if here() ^ 'moonmod' then
+						p [[Александр машет тебе правой рукой и стучит левой по своему шлему. Нужно проверить связь.]]
+					end
 					s.radio = s.radio - 1
 					return
 				end
