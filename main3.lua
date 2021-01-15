@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 0.4$
+--$Version: 0.5$
 --$Author: Пётр Косых$
 xact.walk = walk
 require "snd"
@@ -20,6 +20,11 @@ if not instead.tiny then
 mp:pager_mode(true)
 end
 global 'pics' ({})
+
+function eph_event(ev)
+	return ev == 'Exam' or ev == 'Smell' or ev == 'Listen' or ev == 'Look' or ev == 'Search' or ev == 'Talk'
+		or ev == 'Wait' or ev == 'Ring' or ev == 'Think' or ev == 'Wake'
+end
 
 function pic_add(v)
 	for _, it in pairs(pics) do
@@ -265,7 +270,11 @@ function game:before_Any(ev, w)
 				return false
 			end
 			if w ^ 'alex' then
-				mp:xaction('Talk', _'Беркут')
+				if _'alex'.suit then
+					p [[Чтобы говорить с Александром по радио, нужно {$fmt em|говорить с Беркутом}.]]
+				else
+					mp:xaction('Talk', _'Беркут')
+				end
 				return
 			end
 		end
@@ -649,7 +658,7 @@ room {
 	Distance { -"роща", description = [[Ты видишь, как ветер шелестит зелёной листвой.]]; };
 	Distance { -"бабочка", description = [[Здесь много бабочек. Они похожи на летающие цветы.]] };
 	Distance { -"шмель|кузнечик|стрекозы|стрекоза", description = [[Насекомые повсюду. Тебе нравится слышать звуки насекомых.]] };
-
+	Distance { -"голубь", description = [[Ты видишь белого голубя. Какой он красивый!]] };
 	obj {
 		-"цветы|цветок";
 		description = [[Цветы повсюду! Вы просто окружены цветами: красными, синими, зелёными, жёлтыми, белыми. Им нет числа!]];
@@ -2103,8 +2112,10 @@ Distance { nam = 'moonsky', -"небо|звёзды/но,мн", description = [[
 	Distance { -"Солнце", description = [[Солнце ярко горит в чёрном небе.]] };
 }
 function before_buggy(s, e)
-	if e == 'Enter' or e == 'Walk' or e == 'Smell' or e == 'Listen' or e == 'Exam' or e == 'Exit'
-		or e == 'GetOff' or e == 'Look' or e == 'Talk' then
+	if eph_event(e) then
+		return false
+	end
+	if e == 'Enter' or e == 'Walk' or e == 'Exit' or e == 'GetOff' then
 		return false
 	end
 	if not me():inside'buggy' then
@@ -2123,7 +2134,7 @@ cutscene {
 		-- Он не приходит в себя! Очень низкие пульс и давление. Как буд-то находится в коме или глубоком сне. Не знаю, на что это похоже...]];
 		[[-- ... Ястреб, Заря. В лаборатории должен быть гидротат норадреналина. Попробуйте вколоть.^
 		-- Уже пробовали. Без результатов. Заря, мы выходим на связь через радио в наших скафандрах с ретрансляцией через лунный модуль, но мы не можем таскать скафандры вечно. Нужно время на заправку скафандров и отдых.]];
-		[[-- ... Ястреб, Заря. Разрешается двух-часовой отдых. При любых изменениях обстановки, докладывайте немедленно!^-- Заря, Ястреб. Вас понял.]];
+		[[-- ... Ястреб, Заря. Разрешается двухчасовой отдых. При любых изменениях обстановки, докладывайте немедленно!^-- Заря, Ястреб. Вас понял.]];
 	};
 	exit = function(s)
 		move('buggy', 'base')
@@ -2656,7 +2667,7 @@ room {
 	end;
 	d_to = 'moontech';
 	before_Any = function(s, ev, w)
-		if ev == 'Exam' or ev == 'Smell' or ev == 'Listen' or ev == 'Look' or ev == 'Search' then
+		if eph_event(ev) then
 			return false
 		end
 		if w and  w ^ '#люк' and me():where()^'place' then
@@ -3261,6 +3272,11 @@ room {
 		before_Talk = function(s)
 			if _'скафандр':hasnt'worn' and s.suit or _'скафандр':has'worn' and not s.suit then
 				p [[Александр не слышит тебя.]]
+				if _'скафандр':has'worn' then
+					p [[Наверное потому, что ты в скафандре, а он -- нет.]]
+				else
+					p [[Наверное потому, что он в скафандре.]]
+				end
 				return
 			end
 			if here() ^ 'liv' and _'spaceman1':inside'кровать' then
@@ -4539,7 +4555,8 @@ room {
 			end;
 			before_Any = function(s, ev)
 				local v = _'замок'
-				if ev == 'Exam' or ev == 'Look' or ev == 'Walk' or v.step > 1 then
+				if ev == 'Exam' or ev == 'Look' or ev == 'Walk' or ev == 'Wait' or ev == 'Think'
+					or v.step > 1 then
 					return false
 				end
 				p [[Сначала нужно подойти к трону.]]
