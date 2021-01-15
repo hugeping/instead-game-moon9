@@ -106,6 +106,11 @@ function game:before_Screw(w)
 end
 
 Verb {
+	"покин/уть",
+	"{noun}/вн,scene : Exit",
+}
+
+Verb {
 	"#Ring",
 	"[по|]звон/ить",
 	":Ring"
