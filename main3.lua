@@ -3935,7 +3935,8 @@ room {
 	before_Any = before_buggy;
 	["before_Walk,Enter"] = function(s, w)
 		if w ^ '@w_to' and not know_malapert then
-			return false
+			p [[Этот путь недоступен.]]
+			return
 		end
 		if w ^ '@e_to' or w ^ '@w_to' then
 			if not me():inside'buggy' then
