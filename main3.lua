@@ -3414,7 +3414,13 @@ room {
 					end
 				end;
 				before_LetGo = function(s, w) if w^'болтик' then _'болтик'.know = true end return false end;
-				before_Close = function() return false end;
+				["before_Close,Lock"] = function(s, w)
+					if w and w ^ 'screw' then
+						mp:xaction("Close", s)
+						return
+					end
+					return false
+				end;
 				['before_Open,Unlock,Attack'] = function(s, w)
 					if s:has'open' then
 						p [[Уже вскрыт.]]
