@@ -2116,8 +2116,11 @@ Distance { nam = 'moonsky', -"небо|звёзды/но,мн", description = [[
 	};
 	Distance { -"Солнце", description = [[Солнце ярко горит в чёрном небе.]] };
 }
-function before_buggy(s, e)
+function before_buggy(s, e, w)
 	if eph_event(e) then
+		return false
+	end
+	if w and w:inside 'buggy' then
 		return false
 	end
 	if e == 'Enter' or e == 'Walk' or e == 'Exit' or e == 'GetOff' then
@@ -2336,7 +2339,7 @@ room {
 		description = [[Глядя на серый грунт ты думаешь о том, что печальный лунный ландшафт везде одинаков. На грунте ты видишь следы от лунохода. Они ведут дальше на запад.]];
 	};
 	Careful {
-		-"маяк,фонарь";
+		-"маяк,радиомаяк,фонарь";
 		description = [[Это радиомаяк, который привёл луноход к пику. Также он снабжён оптическим светодиодным пульсирующим фонарём. Работает от солнечных батарей.]];
 	}:with {
 		Careful {
@@ -3964,7 +3967,7 @@ room {
 	'moonsky';
 	'пыль';
 	Careful {
-		-"маяк,фонарь";
+		-"маяк,радиомаяк,фонарь";
 		broken = false;
 		description = function(s)
 			if s.broken then
