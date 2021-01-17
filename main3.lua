@@ -1,7 +1,7 @@
 --$Name: Луна-9$
 --$Version: 0.6$
 --$Author: Пётр Косых$
---$Info: Интерактивная новелла, Январь 2021$
+--$Info: Интерактивная новелла\nЯнварь 2021$
 xact.walk = walk
 require "snd"
 require "fmt"
