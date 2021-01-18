@@ -803,7 +803,7 @@ cutscene {
 {$fmt em|Пётр Косых / Январь 2021}^
 {$fmt em|Графика: Пётр Косых, фотография из НАСА}^
 {$fmt em|Трек: Novus Initium by Alexander Nakarada}^
-{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Zlobot, Excelenter, V.V., Kerber}^^
+{$fmt em|Тестирование: Oleg Bosh, Khaelenmore Thaal, Zlobot, Excelenter, V.V., Kerber, PholaX}.^^
 Спасибо вам за прохождение игры!^
 Если вам понравилось, вы можете найти похожие игры на:^^
 {$link|http://instead-games.ru}^
@@ -1917,7 +1917,7 @@ room {
 	Path {
 		-"кабина",
 		desc = "Ты можешь подняться в кабину.";
-		walk_to = 'moontech';
+		walk_to = 'moonmod';
 	};
 	obj {
 		nam = 'buggy';
