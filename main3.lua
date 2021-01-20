@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 0.7$
+--$Version: 0.8$
 --$Author: Пётр Косых$
 --$Info: Интерактивная новелла\nЯнварь 2021$
 xact.walk = walk
@@ -888,12 +888,16 @@ room {
 			end
 		end
 	end;
-	before_Listen = function(s)
+	before_Listen = function(s, w)
 		if isDaemon 'телефон' then
 			p [[Ты слышишь мелодию вызова.]]
 			return
 		end
-		return false
+		if w and w ^ 'жена' then
+			p [[Лариса молчит.]]
+		else
+			p [[Стоит звенящая тишина.]]
+		end
 	end;
 	["before_Ring,Answer"] = function(s)
 		if isDaemon 'телефон' then
@@ -1943,6 +1947,10 @@ room {
 			 if _'alex':inside(s) then p [[Рядом сидит Александр.]] end
 		end;
 		['before_Pull,Push,Take,Transfer'] = function(s, w)
+			if not here()^'moon1' then
+				if mp.event == 'Take' then p [[Собрался носить луноход с собой?]] return end
+				return false
+			end
 			if not s.indoor and not s.assembled and
 					(mp.event == 'Pull' or mp.event == 'Take' or w == me()) then
 				s.assembled = true
