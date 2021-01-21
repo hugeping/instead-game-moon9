@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 0.8$
+--$Version: 0.9$
 --$Author: Пётр Косых$
 --$Info: Интерактивная новелла\nЯнварь 2021$
 xact.walk = walk
@@ -2519,6 +2519,10 @@ obj {
 		else
 			p [[{$fmt em|Они} советуют избавиться от него.
 		Он шёл сюда пешком и сильно ослаб. Лунная принцесса говорит, что она будет твоей, а не его.]];
+			if s.step < 1 then
+				pn"^"
+				s:dsc()
+			end
 		end
 	end;
 	daemon = function(s)
@@ -2536,10 +2540,13 @@ obj {
 	end;
 	['before_Attack,Push'] = function(s)
 		if s.step < 1 then
-			if not _'труба':inside(s) then
-				p [[Ты набрасываешься на лежащего космонавта.]]
+			if have 'труба' then
+				p [[Ты набрасываешься на лежащего космонавта, нанося ему сильные удары куском трубы.]]
 			else
-				p [[Ты набрасываешься на лежащего космонавта и вырываешь трубу из его рук.]]
+				p [[Ты набрасываешься на лежащего космонавта, нанося ему сильные удары.]]
+			end
+			if _'труба':inside(s) then
+				place 'труба'
 			end
 			s.step = -100
 			DaemonStop(s)
@@ -2550,7 +2557,7 @@ obj {
 	end;
 	dsc = function(s)
 		if not isDaemon(s) then
-			p [[Космонавт лежит на земле.]]
+			p [[Космонавт лежит на грунте.]]
 			return
 		end
 		if s.step < 1 then
@@ -2783,7 +2790,7 @@ room {
 		-"панель управления,панель,прибор*|компьютер";
 		before_Attack = function(s, w)
 			if not know_parts then
-				return
+				return false
 			end
 			if _'запчасти'.got then
 				p [[Лунная принцесса говорит, что запчастей уже достаточно.]]
@@ -3298,6 +3305,13 @@ room {
 					p [[Ты рад видеть знакомое лицо Александра без скафандра.]]
 				end
 			end
+		end;
+		life_Give = function(s)
+			if mission then
+				p [[Лунная принцесса не желает этого.]]
+				return
+			end
+			return false
 		end;
 		before_WakeOther = function(s)
 			if mission then
