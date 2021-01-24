@@ -58,7 +58,16 @@ function game:pic()
 	return pix
 end
 
-mp.cursor = fmt.img 'gfx/cursor.png'
+if not instead.tiny then
+	require "sprite"
+	local scale = sprite.font_scaled_size(1)
+	if scale > 1 then
+		mp.cursor = fmt.img(sprite.new('gfx/cursor.png'):scale(scale))
+	else
+		mp.cursor = fmt.img 'gfx/cursor.png'
+	end
+end
+
 mp.msg.Enter.EXITBEFORE = function()
 	if me():where() ^'place' then
 		p [[Но ты пристёгнут ремнями!]]
