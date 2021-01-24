@@ -60,9 +60,9 @@ end
 
 if not instead.tiny then
 	require "sprite"
-	local scale = sprite.font_scaled_size(1)
-	if scale > 1 then
-		mp.cursor = fmt.img(sprite.new('gfx/cursor.png'):scale(scale))
+	local scale = sprite.font_scaled_size(100)
+	if scale > 100 then
+		mp.cursor = fmt.img(sprite.new('gfx/cursor.png'):scale(scale/100))
 	else
 		mp.cursor = fmt.img 'gfx/cursor.png'
 	end
