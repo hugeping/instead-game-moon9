@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 0.9$
+--$Version: 1.0$
 --$Author: Пётр Косых$
 --$Info: Интерактивная новелла\nЯнварь 2021$
 xact.walk = walk
