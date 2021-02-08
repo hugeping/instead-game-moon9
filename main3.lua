@@ -2822,7 +2822,7 @@ room {
 			if here() ~= m then
 				return
 			end
-			m.height = m.height + (rnd(3) + m.vspeed)
+			m.height = m.height + (rnd(3)-2 + m.vspeed)
 			if m.height < 120 then
 				if m.pos < 100 then
 					p [[Садиться в таких условиях видимости -- безумие!]]
