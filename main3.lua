@@ -2196,6 +2196,7 @@ cutscene {
 }
 room {
 	nam = 'device';
+	vacuum = true;
 	title = function(s)
 		if mission then
 			p "трансмиттер"
