@@ -1,5 +1,5 @@
 --$Name: Луна-9$
---$Version: 1.0$
+--$Version: 1.1$
 --$Author: Пётр Косых$
 --$Info: Интерактивная новелла\nЯнварь 2021$
 xact.walk = walk
@@ -2297,6 +2297,12 @@ room {
 			-"космонавт,астронавт,Лю,Ливей";
 			before_Pull = function(s)
 				mp:xaction("Take", s)
+			end;
+			before_Take = function(s)
+				if not mission then
+					return false
+				end
+				p [[Тебе он не нужен.]]
 			end;
 			before_Talk = [[Он не в том состоянии, чтобы разговаривать.]];
 			description = function(s)
