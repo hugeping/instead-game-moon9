@@ -1063,6 +1063,10 @@ obj {
 		end
 	end;
 	["Disrobe,ClipOff"] = function(s)
+		if not me():inside('кресло') and not me():inside('place') then
+			p [[Но ты не пристёгнут!]]
+			return
+		end
 		if here()^'moonmod' then
 			p [[Ты расстёгиваешь ремни и покидаешь стойку.]]
 			walkout 'moonmod'
