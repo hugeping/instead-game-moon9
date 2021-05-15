@@ -209,7 +209,7 @@ _Пётр Косых, январь 2021_
 - [Игра Луна-9 на itch.io](https://instead.itch.io/moon9)
 - [Все игры на INSTEAD](https://instead-games.ru)
 - [Интерпретатор INSTEAD](https://instead.hugeping.ru)
-- [Станция Ping](https://hugeping.tk)
+- [Станция Ping](https://club.hugeping.ru)
 
 ### Список глаголов
 
